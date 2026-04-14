@@ -23,7 +23,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
             child: Row(
               mainAxisAlignment: .center,
               children: [
-                Text('기록', style: TextStyle(color: Colors.black, fontSize: 20, fontWeight: .w800)),
+                Text('기록', style: TextStyle(color: titleColor, fontSize: 20, fontWeight: .w800)),
                 Spacer(),
                 Container(
                   width: 38,

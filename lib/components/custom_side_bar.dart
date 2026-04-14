@@ -19,7 +19,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
       height: sizeh(context),
       decoration: BoxDecoration(
         color: backgroundColor,
-        border: Border(right: BorderSide(color: Color(0xffEAEAEA))),
+        border: Border(right: BorderSide(color: dividerColor)),
       ),
       child: Column(
         crossAxisAlignment: .center,
@@ -38,28 +38,59 @@ class _CustomSideBarState extends State<CustomSideBar> {
             height: 38,
             padding: .all(8),
             decoration: BoxDecoration(
-              color: Color(0xffF9F9F9),
+              color: surfaceColor,
               borderRadius: .circular(10),
             ),
             child: SvgPicture.asset('assets/icons/exit.svg'),
           ),
           SizedBox(height: 14),
-          Divider(color: Color(0xffEFEFEF), indent: 22, endIndent: 22, radius: .circular(100), thickness: 2),
+          Divider(color: dividerColor, indent: 22, endIndent: 22, radius: .circular(100), thickness: 2),
           SizedBox(height: 14),
           Container(
             width: 38,
             height: 60,
+            padding: .symmetric(vertical: 6),
             decoration: BoxDecoration(
-              color: Color(0xffE2E2E2),
+              color: dividerColor,
               borderRadius: .circular(13),
             ),
             child: Stack(
               alignment: .center,
               children: [
-                Align(alignment: .topCenter, child: GestureDetector(onTap: () => Store.isLightMode.value = true, child: Container(color: Colors.red, width: 12, child: SvgPicture.asset('assets/icons/dark.svg', fit: .cover)))),
-                Align(alignment: .bottomCenter, child: GestureDetector(onTap: () {
-                  Store.isLightMode.value = false;
-                }, child: Container(color: Colors.red, width: 12, child: SvgPicture.asset('assets/icons/light.svg', fit: .cover)))),
+                AnimatedAlign(
+                  duration: Duration(milliseconds: 400),
+                  alignment: .topCenter,
+                  child: GestureDetector(
+                    onTap: () => Store.isLightMode.value = false,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      padding: .all(6),
+                      decoration: BoxDecoration(
+                        color: Store.isLightMode.value ? Colors.transparent : buttonColor,
+                        borderRadius: .circular(10),
+                      ),
+                      child: SvgPicture.asset('assets/icons/${Store.isLightMode.value ? '' : 'dark_'}dark.svg', fit: .cover),
+                    ),
+                  ),
+                ),
+                AnimatedAlign(
+                  duration: Duration(milliseconds: 400),
+                  alignment: .bottomCenter,
+                  child: GestureDetector(
+                    onTap: () => Store.isLightMode.value = true,
+                    child: Container(
+                      width: 24,
+                      height: 24,
+                      padding: .all(6),
+                      decoration: BoxDecoration(
+                        color: !Store.isLightMode.value ? Colors.transparent : buttonColor,
+                        borderRadius: .circular(10),
+                      ),
+                      child: SvgPicture.asset('assets/icons/${Store.isLightMode.value ? '' : 'dark_'}light.svg', fit: .cover),
+                    ),
+                  ),
+                ),
               ],
             ),
           ),
@@ -79,7 +110,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
         height: 38,
         padding: .all(10),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor : secondaryColor,
+          color: isSelected ? Color(0xff10A37F) : secondaryColor,
           borderRadius: .circular(10),
         ),
         child: SvgPicture.asset('assets/icons/${iconName}_${isSelected ? 'selected' : 'unselected'}.svg'),
