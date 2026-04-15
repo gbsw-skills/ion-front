@@ -1,11 +1,9 @@
 class ChatModel {
-  final int id;
-  final String user;
+  final bool isMine;
   final String content;
 
   ChatModel({
-    required this.id,
-    required this.user,
+    required this.isMine,
     required this.content,
   });
 }
