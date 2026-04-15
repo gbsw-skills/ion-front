@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:ion/components/custom_history_bar.dart';
 import 'package:ion/components/custom_side_bar.dart';
 import 'package:ion/store.dart';
-import 'package:ion/utils.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -17,7 +15,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
       body: Row(
         children: [
           CustomSideBar(),
