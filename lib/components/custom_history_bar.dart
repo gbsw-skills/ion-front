@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ion/enums/history_tap.dart';
@@ -112,6 +114,9 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     height: 55,
     decoration: BoxDecoration(
       borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: Store.isLightMode.value
+          ? Color(0xFFE2E2E2)
+          : Color(0xFF3F424A)),
       color: tabBtnBackgroundColor,
     ),
     child: Stack(
@@ -123,12 +128,50 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
                 : Alignment.centerRight,
             duration: Duration(milliseconds: 200),
             curve: Curves.easeOut,
-            child: Container(
+            child: SizedBox(
               height: double.infinity,
               width: constraints.maxWidth / 2,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(8),
-                color: backgroundColor,
+              child: Stack(
+                children: [
+                  Transform.translate(
+                    offset: Offset(0, 18),
+                    child: Opacity(
+                      opacity: 0.4,
+                      child: ImageFiltered(
+                        imageFilter: ImageFilter.blur(
+                          sigmaX: 4,
+                          sigmaY: 4,
+                        ),
+                        child: Container(
+                          margin: EdgeInsetsGeometry.symmetric(horizontal: 2),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            color: Color(0xff1E1F22),
+                            gradient: LinearGradient(
+                              stops: [0.32, 1],
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Store.isLightMode.value
+                                    ? Color(0xFF878787)
+                                    : Color(0xff1E1F22),
+                                Store.isLightMode.value
+                                    ? Color(0xFFE8E8E8)
+                                    : Color(0xff1E1F22),
+                              ],
+                            )
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                      color: backgroundColor,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
