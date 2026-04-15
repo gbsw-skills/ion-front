@@ -35,8 +35,10 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Store.isLightMode.value
             ? Color(0xFFE2E2E2)
-            : gray400),
-        color: tabBtnBackgroundColor,
+            : Color(0xFF3F424A)),
+        color: Store.isLightMode.value
+            ? Color(0xffEEEEEE)
+            : Color(0xFF3F424A),
       ),
       child: Stack(
         children: [
@@ -87,7 +89,7 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: backgroundColor,
+                        color: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
                       ),
                     ),
                   ],
@@ -108,9 +110,12 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
 
   Widget historyTabItem(String icon, HistoryTap tap, int value) {
     bool isSelected = widget.selectTap == tap;
+    Color unselectedColor = Store.isLightMode.value
+        ? Color(0xFF3B3B3B)
+        : Color(0xFFEEEEEE);
     Color color = isSelected
         ? Color(0xFF14B48D)
-        : secondaryTextColor;
+        : unselectedColor;
 
     return Expanded(
       child: GestureDetector(

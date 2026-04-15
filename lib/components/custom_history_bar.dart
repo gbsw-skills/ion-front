@@ -30,7 +30,9 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       padding: const EdgeInsets.all(16.0),
       width: 350,
       height: sizeh(context),
-      color: secondaryBackgroundColor,
+      color: Store.isLightMode.value
+          ? Color(0xffFFFFFF)
+          : Color(0xff282A2E),
       child: Column(
         spacing: 20,
         children: [
@@ -67,7 +69,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
         borderRadius: BorderRadius.circular(10),
         color: (Store.isLightMode.value
             ? Color(0xFFD6D6D6)
-            : gray400).withValues(alpha: 0.25),
+            : Color(0xFF3F424A)).withValues(alpha: 0.25),
       ),
       child: Row(
         spacing: 5,
@@ -110,7 +112,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     decoration: BoxDecoration(
       color: Store.isLightMode.value
           ? Color(0xffEFEFEF)
-          : backgroundColor,
+          : Color(0xff1E1F22),
       borderRadius: .circular(10),
     ),
     child: SvgPicture.asset('assets/icons/search_filter.svg',),
@@ -134,7 +136,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     decoration: BoxDecoration(
       color: Store.isLightMode.value
           ? Color(0xffEFEFEF)
-          : backgroundColor,
+          : Color(0xff1E1F22),
       borderRadius: .circular(10),
     ),
     child: SvgPicture.asset(
