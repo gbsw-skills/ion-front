@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ion/components/history/history_tap_bar.dart';
 import 'package:ion/enums/history_tap.dart';
 import 'package:ion/store.dart';
 
@@ -16,8 +17,6 @@ class CustomHistoryBar extends StatefulWidget {
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
   HistoryTap selectTap = HistoryTap.chats;
-  int chatsValue = 24;
-  int savedValue = 24;
 
   void changeTap(HistoryTap tap) {
     setState(() {
@@ -49,142 +48,14 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
             ],
           ),
           SizedBox(height: 20,),
-          historyTabBar(),
+          HistoryTapBar(
+            changeTap: (tap) => changeTap(tap),
+            selectTap: selectTap,
+          ),
         ],
       ),
     );
   }
-
-  Widget historyTabItem(String icon, HistoryTap tap, int value) {
-    bool isSelected = selectTap == tap;
-    Color color = isSelected
-        ? Color(0xFF14B48D)
-        : secondaryTextColor;
-
-    return Expanded(
-      child: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => changeTap(tap),
-        child: SizedBox(
-          height: double.infinity,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            spacing: 8,
-            children: [
-              SizedBox(
-                height: 13,
-                width: 13,
-                child: SvgPicture.asset(
-                  'assets/icons/$icon.svg',
-                  colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
-                ),
-              ),
-              Text(tap.label, style: TextStyle(
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),),
-              IntrinsicHeight(
-                child: Container(
-                  padding: EdgeInsetsGeometry.symmetric(horizontal: 6, vertical: 1),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(5),
-                    color: color.withValues(alpha: 0.11)
-                  ),
-                  child: Text(
-                    value.toString(),
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: color,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget historyTabBar() => Container(
-    padding: EdgeInsets.all(5),
-    width: double.infinity,
-    height: 55,
-    decoration: BoxDecoration(
-      borderRadius: BorderRadius.circular(10),
-      border: Border.all(color: Store.isLightMode.value
-          ? Color(0xFFE2E2E2)
-          : Color(0xFF3F424A)),
-      color: tabBtnBackgroundColor,
-    ),
-    child: Stack(
-      children: [
-        LayoutBuilder(
-          builder: (context, constraints) => AnimatedAlign(
-            alignment: selectTap == HistoryTap.chats
-                ? Alignment.centerLeft
-                : Alignment.centerRight,
-            duration: Duration(milliseconds: 200),
-            curve: Curves.easeOut,
-            child: SizedBox(
-              height: double.infinity,
-              width: constraints.maxWidth / 2,
-              child: Stack(
-                children: [
-                  Transform.translate(
-                    offset: Offset(0, 18),
-                    child: Opacity(
-                      opacity: 0.4,
-                      child: ImageFiltered(
-                        imageFilter: ImageFilter.blur(
-                          sigmaX: 4,
-                          sigmaY: 4,
-                        ),
-                        child: Container(
-                          margin: EdgeInsetsGeometry.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
-                            color: Color(0xff1E1F22),
-                            gradient: LinearGradient(
-                              stops: [0.32, 1],
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Store.isLightMode.value
-                                    ? Color(0xFF878787)
-                                    : Color(0xff1E1F22),
-                                Store.isLightMode.value
-                                    ? Color(0xFFE8E8E8)
-                                    : Color(0xff1E1F22),
-                              ],
-                            )
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      color: backgroundColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-        Row(
-          children: [
-            historyTabItem('chat_filled', HistoryTap.chats, chatsValue),
-            historyTabItem('flag_filled', HistoryTap.saved, chatsValue),
-          ],
-        ),
-      ],
-    ),
-  );
 
   Widget newBtn() => Container(
     padding: EdgeInsets.all(10),
