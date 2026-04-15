@@ -32,6 +32,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       height: sizeh(context),
       color: secondaryBackgroundColor,
       child: Column(
+        spacing: 20,
         children: [
           Row(
             mainAxisAlignment: .center,
@@ -47,15 +48,73 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
               menuBtn(),
             ],
           ),
-          SizedBox(height: 20,),
           HistoryTapBar(
             changeTap: (tap) => changeTap(tap),
             selectTap: selectTap,
           ),
+          searchFilterBar(),
         ],
       ),
     );
   }
+
+  Widget searchBar() => Expanded(
+    child: Container(
+      padding: EdgeInsets.symmetric(horizontal: 10),
+      alignment: Alignment.centerLeft,
+      height: 37,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        color: (Store.isLightMode.value
+            ? Color(0xFFD6D6D6)
+            : gray400).withValues(alpha: 0.25),
+      ),
+      child: Row(
+        spacing: 5,
+        children: [
+          SizedBox(
+            width: 15,
+            child: SvgPicture.asset('assets/icons/search.svg'),
+          ),
+          Expanded(
+            child: TextField(
+              style: TextStyle(
+                fontSize: 16,
+                color: Color(0xFF575B65),
+                fontWeight: FontWeight.w500,
+              ),
+              decoration: InputDecoration(
+                isCollapsed: true,
+                hintText: 'Search...',
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget searchFilterBar() => Row(
+    spacing: 12,
+    children: [
+      searchBar(),
+      filterBtn(),
+    ],
+  );
+
+  Widget filterBtn() => Container(
+    padding: EdgeInsets.all(9),
+    width: 38,
+    height: 38,
+    decoration: BoxDecoration(
+      color: Store.isLightMode.value
+          ? Color(0xffEFEFEF)
+          : backgroundColor,
+      borderRadius: .circular(10),
+    ),
+    child: SvgPicture.asset('assets/icons/search_filter.svg',),
+  );
 
   Widget newBtn() => Container(
     padding: EdgeInsets.all(10),

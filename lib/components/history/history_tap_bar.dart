@@ -35,7 +35,7 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Store.isLightMode.value
             ? Color(0xFFE2E2E2)
-            : Color(0xFF3F424A)),
+            : gray400),
         color: tabBtnBackgroundColor,
       ),
       child: Stack(
