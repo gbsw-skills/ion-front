@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ion/components/history/history_tap_bar.dart';
@@ -7,6 +5,7 @@ import 'package:ion/enums/history_tap.dart';
 import 'package:ion/store.dart';
 
 import '../utils.dart';
+import 'history/history_chat_list.dart';
 
 class CustomHistoryBar extends StatefulWidget {
   const CustomHistoryBar({super.key});
@@ -16,6 +15,7 @@ class CustomHistoryBar extends StatefulWidget {
 }
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
+  int selectedChatId = 0; // 나중에 좀 더 상위단으로 올려야 할듯
   HistoryTap selectTap = HistoryTap.chats;
 
   void changeTap(HistoryTap tap) {
@@ -24,10 +24,16 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     });
   }
 
+  void changeChat(int id) {
+    setState(() {
+      selectedChatId = id;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: EdgeInsets.symmetric(vertical: 16),
       width: 350,
       height: sizeh(context),
       color: Store.isLightMode.value
@@ -36,25 +42,37 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       child: Column(
         spacing: 20,
         children: [
-          Row(
-            mainAxisAlignment: .center,
-            children: [
-              Text('기록', style: TextStyle(
-                color: Store.isLightMode.value ? Colors.black : Colors.white,
-                fontSize: 22,
-                fontWeight: .w700),
-              ),
-              Spacer(),
-              newBtn(),
-              SizedBox(width: 14),
-              menuBtn(),
-            ],
+          Padding(
+           padding: const EdgeInsets.symmetric(horizontal: 16.0),
+           child: Column(
+             spacing: 20,
+             children: [
+               Row(
+                 mainAxisAlignment: .center,
+                 children: [
+                   Text('기록', style: TextStyle(
+                       color: Store.isLightMode.value ? Colors.black : Colors.white,
+                       fontSize: 22,
+                       fontWeight: .w700),
+                   ),
+                   Spacer(),
+                   newBtn(),
+                   SizedBox(width: 14),
+                   menuBtn(),
+                 ],
+               ),
+               HistoryTapBar(
+                 changeTap: (tap) => changeTap(tap),
+                 selectTap: selectTap,
+               ),
+               searchFilterBar(),
+             ],
+           ),
           ),
-          HistoryTapBar(
-            changeTap: (tap) => changeTap(tap),
-            selectTap: selectTap,
+          HistoryChatList(
+            selectedChatId: selectedChatId,
+            changeChat: (id) => changeChat(id),
           ),
-          searchFilterBar(),
         ],
       ),
     );
