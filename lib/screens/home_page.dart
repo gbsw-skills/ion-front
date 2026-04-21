@@ -24,7 +24,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
+    backgroundColor: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
       body: Row(
         children: [
           CustomSideBar(),
