@@ -10,6 +10,8 @@ class CustomHistoryBar extends StatefulWidget {
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return Container(
+      width: 350,
+    );
   }
 }
