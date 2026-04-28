@@ -10,7 +10,7 @@ class AuthRepository {
       "password": password,
     };
     final response = await http.post(
-      Uri.parse('https://ion.gbsw.hs.kr/api/auth/login'),
+      Uri.parse('${Store.baseUrl}/auth/login'),
       body: jsonEncode(body),
       headers: {'Content-Type': 'application/json'}
     );
@@ -30,7 +30,7 @@ class AuthRepository {
   Future<String> refresh() async {
     final body = {'refreshToken': Store.refreshToken};
     final response = await http.post(
-        Uri.parse('https://ion.gbsw.hs.kr/api/auth/refresh'),
+        Uri.parse('${Store.baseUrl}/auth/refresh'),
         body: jsonEncode(body),
         headers: {'Content-Type': 'application/json'}
     );
@@ -49,7 +49,7 @@ class AuthRepository {
 
   Future<String> logout() async {
     final response = await http.post(
-        Uri.parse('https://ion.gbsw.hs.kr/api/auth/logout'),
+        Uri.parse('${Store.baseUrl}/auth/logout'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer ${Store.token}'

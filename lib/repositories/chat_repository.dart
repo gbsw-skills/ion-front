@@ -6,7 +6,7 @@ import 'package:ion/store.dart';
 class ChatRepository {
   Future<String> createSessions() async {
     final response = await http.post(
-      Uri.parse('https://ion.gbsw.hs.kr/api/chat/sessions'),
+      Uri.parse('${Store.baseUrl}/chat/sessions'),
       headers: {'Authorization': 'Bearer ${Store.token}'},
     );
 
@@ -18,7 +18,7 @@ class ChatRepository {
 
   Future<String> searchSessions() async {
     final response = await http.get(
-      Uri.parse('https://ion.gbsw.hs.kr/api/v1/chat/sessions'),
+      Uri.parse('${Store.baseUrl}/v1/chat/sessions'),
       headers: {'Authorization': 'Bearer ${Store.token}'},
     );
 
