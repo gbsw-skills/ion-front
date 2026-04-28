@@ -156,4 +156,6 @@ class Store {
       ],
     ),
   ];
+  static late String token;
+  static late String refreshToken;
 }
