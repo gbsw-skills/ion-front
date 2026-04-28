@@ -51,7 +51,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
                  mainAxisAlignment: .center,
                  children: [
                    Text('기록', style: TextStyle(
-                       color: Store.isLightMode.value ? Colors.black : Colors.white,
+                       color: Store.isLightMode.value ? Color(0xFF1E1F22) : Colors.white,
                        fontSize: 22,
                        fontWeight: .w700),
                    ),
