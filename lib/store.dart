@@ -5,7 +5,7 @@ import 'package:ion/models/chat_room_model.dart';
 class Store {
   static ValueNotifier<bool> isLightMode = ValueNotifier(true);
   static int currentIndex = 0;
-  static String baseUrl = 'https://ion.gbsw.hs.kr/api';
+  static String baseUrl = 'http://ion.gbsw.hs.kr/api';
   static List<String> tabBarList = ['chat', 'filter', 'compass', 'settings'];
   static List<ChatRoomModel> chatList = [
     ChatRoomModel(
