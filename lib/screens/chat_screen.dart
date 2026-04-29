@@ -64,6 +64,7 @@ class _ChatScreenState extends State<ChatScreen> {
           ),
           Expanded(
             child: Container(
+              clipBehavior: Clip.hardEdge,
               margin: EdgeInsets.only(right: 18, bottom: 18),
               alignment: Alignment.center,
               width: double.infinity,
