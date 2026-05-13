@@ -1,11 +1,12 @@
 import 'package:flutter/cupertino.dart';
+import 'package:ion/enums/request_code.dart';
 import 'package:ion/models/chat_model.dart';
 import 'package:ion/models/chat_room_model.dart';
 
 class Store {
   static ValueNotifier<bool> isLightMode = ValueNotifier(true);
   static int currentIndex = 0;
-  static String baseUrl = 'http://ion.gbsw.hs.kr/api';
+  static String baseUrl = 'http://ion.gbsw.hs.kr/api/v1';
   static List<String> tabBarList = ['chat', 'filter', 'compass', 'settings'];
   static List<ChatRoomModel> chatList = [
     ChatRoomModel(
@@ -127,4 +128,11 @@ class Store {
   ];
   static late String token;
   static late String refreshToken;
+
+  static RequestCode handleError(int statusCode, Map<String, dynamic> error) {
+    print('statusCode: $statusCode');
+    print('errorCode: ${error['code']}');
+    print('errorMessage: ${error['message']}');
+    return RequestCode.fromCode(error['code']);
+  }
 }

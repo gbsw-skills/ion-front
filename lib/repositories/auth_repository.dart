@@ -1,64 +1,116 @@
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import 'package:ion/enums/request_code.dart';
 import 'package:ion/store.dart';
 
 class AuthRepository {
-  Future<String> login(String username, String password) async {
-    final body = {
-      "username": username,
-      "password": password,
-    };
-    final response = await http.post(
-      Uri.parse('${Store.baseUrl}/auth/login'),
-      body: jsonEncode(body),
-      headers: {'Content-Type': 'application/json'}
-    );
+  final storage = FlutterSecureStorage();
 
-    if (response.statusCode == 200) {
+  Future<RequestCode> login(String username, String password) async {
+    try {
+      final body = {
+        "username": username,
+        "password": password,
+      };
+      final response = await http.post(
+          Uri.parse('${Store.baseUrl}/auth/login'),
+          body: jsonEncode(body),
+          headers: {'Content-Type': 'application/json'}
+      );
+
       final responseData = jsonDecode(response.body);
-      Store.token = responseData['data']['accessToken'];
-      Store.refreshToken = responseData['data']['refreshToken'];
-      return 'success'; // 성공
+
+      if (response.statusCode == 200) {
+        await setAccessToken(responseData['data']['accessToken']);
+        await setRefreshToken(responseData['data']['refreshToken']);
+        final userData = {
+          "accessToken": await accessToken,
+          "refreshToken": await refreshToken,
+          "id": responseData['id'],
+          "username": responseData['username'],
+          "displayName": responseData['displayName'],
+          "role": responseData['role'],
+        };
+
+        await storage.write(key: 'userData', value: jsonEncode(userData));
+
+        return RequestCode.SUCCESS; // 성공
+      }
+
+      return Store.handleError(response.statusCode, responseData['error']);
+    } catch(e) {
+      print('로그인 에러: $e');
+      return RequestCode.FAIL; // 실패
     }
-    if (response.statusCode == 401) {
-      return 'different'; // 아이디/비밀번호 불일치
-    }
-    return 'fail'; // 실패
   }
 
-  Future<String> refresh() async {
-    final body = {'refreshToken': Store.refreshToken};
-    final response = await http.post(
-        Uri.parse('${Store.baseUrl}/auth/refresh'),
-        body: jsonEncode(body),
-        headers: {'Content-Type': 'application/json'}
-    );
+  Future<RequestCode> refresh() async {
+    try {
+      final body = {'refreshToken': refreshToken};
+      final response = await http.post(
+          Uri.parse('${Store.baseUrl}/auth/refresh'),
+          body: jsonEncode(body),
+          headers: {'Content-Type': 'application/json'}
+      );
 
-    if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
-      Store.token = responseData['data']['accessToken'];
-      Store.refreshToken = responseData['data']['refreshToken'];
-      return 'success'; // 성공
+
+      if (response.statusCode == 200) {
+        await setAccessToken(responseData['data']['accessToken']);
+        await setRefreshToken(responseData['data']['refreshToken']);
+        return RequestCode.SUCCESS; // 성공
+      }
+
+      deleteAccessToken();
+      deleteRefreshToken();
+
+      return Store.handleError(response.statusCode, responseData['error']);
+    } catch(e) {
+      print('refresh 에러: $e');
+      return RequestCode.FAIL; // 실패
     }
-    if (response.statusCode == 401) {
-      return "invalid"; // Refresh Token 만료 또는 무효
-    }
-    return 'fail'; // 실패
   }
 
-  Future<String> logout() async {
-    final response = await http.post(
-        Uri.parse('${Store.baseUrl}/auth/logout'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${Store.token}'
-        }
-    );
+  Future<RequestCode> logout() async {
+    try {
+      final response = await http.post(
+          Uri.parse('${Store.baseUrl}/auth/logout'),
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $accessToken'
+          }
+      );
 
-    if (response.statusCode == 200) {
-      return 'success'; // 성공
+      if (response.statusCode == 200) {
+        deleteAccessToken();
+        deleteRefreshToken();
+        return RequestCode.SUCCESS; // 성공
+      }
+    } catch(e) {
+      print('로그아웃 에러: $e');
+      } finally {
+        return RequestCode.FAIL; // 실패
     }
-    return 'fail'; // 실패
+  }
+
+  Future<String?> get accessToken => storage.read(key: 'accessToken');
+  Future<String?> get refreshToken => storage.read(key: 'refreshToken');
+
+  Future<void> setAccessToken(String accessToken) async {
+    await storage.write(key: 'accessToken', value: accessToken);
+  }
+
+  Future<void> deleteAccessToken() async {
+    await storage.delete(key: 'accessToken');
+  }
+
+  Future<void> setRefreshToken(String refreshToken) async {
+    await storage.write(key: 'refreshToken', value: refreshToken);
+  }
+
+  Future<void> deleteRefreshToken() async {
+    await storage.delete(key: 'refreshToken');
   }
 }
