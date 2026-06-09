@@ -14,6 +14,20 @@ class CustomSideBar extends StatefulWidget {
 }
 
 class _CustomSideBarState extends State<CustomSideBar> {
+  @override
+  void initState() {
+    super.initState();
+    Store.isLightMode.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    Store.isLightMode.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() => setState(() {});
+
   Future<void> _logout() async {
     await AuthRepository().logout();
     if (!mounted) return;
@@ -60,48 +74,71 @@ class _CustomSideBarState extends State<CustomSideBar> {
           SizedBox(height: 14),
           Divider(color: Store.isLightMode.value ? Color(0xffEAEAEA) : Color(0xff2D2E30), indent: 22, endIndent: 22, radius: .circular(100), thickness: 2),
           SizedBox(height: 14),
-          Container(
+          AnimatedContainer(
+            duration: Duration(milliseconds: 300),
             width: 38,
             height: 60,
-            padding: .symmetric(vertical: 6),
+            padding: .symmetric(vertical: 6, horizontal: 6),
             decoration: BoxDecoration(
               color: Store.isLightMode.value ? Color(0xffE2E2E2) : Color(0xff3F424A),
               borderRadius: .circular(13),
             ),
             child: Stack(
-              alignment: .center,
               children: [
+                // 슬라이딩 pill
                 AnimatedAlign(
-                  duration: Duration(milliseconds: 400),
-                  alignment: .topCenter,
-                  child: GestureDetector(
-                    onTap: () => Store.isLightMode.value = false,
-                    child: Container(
-                      width: 24,
-                      height: 24,
-                      padding: .all(6),
-                      decoration: BoxDecoration(
-                        color: Store.isLightMode.value ? Colors.transparent : Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff64666D),
-                        borderRadius: .circular(10),
-                      ),
-                      child: SvgPicture.asset('assets/icons/${Store.isLightMode.value ? '' : 'dark_'}dark.svg', fit: .cover),
+                  duration: Duration(milliseconds: 300),
+                  curve: Curves.easeInOut,
+                  alignment: Store.isLightMode.value
+                      ? Alignment.bottomCenter
+                      : Alignment.topCenter,
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    width: double.infinity,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: Store.isLightMode.value
+                          ? Colors.white
+                          : Color(0xff64666D),
+                      borderRadius: .circular(8),
                     ),
                   ),
                 ),
-                AnimatedAlign(
-                  duration: Duration(milliseconds: 400),
-                  alignment: .bottomCenter,
+                // 다크 모드 아이콘 (고정 상단)
+                Align(
+                  alignment: Alignment.topCenter,
+                  child: GestureDetector(
+                    onTap: () => Store.isLightMode.value = false,
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 24,
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/${Store.isLightMode.value ? '' : 'dark_'}dark.svg',
+                          width: 12,
+                          height: 12,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 라이트 모드 아이콘 (고정 하단)
+                Align(
+                  alignment: Alignment.bottomCenter,
                   child: GestureDetector(
                     onTap: () => Store.isLightMode.value = true,
-                    child: Container(
-                      width: 24,
+                    behavior: HitTestBehavior.opaque,
+                    child: SizedBox(
+                      width: double.infinity,
                       height: 24,
-                      padding: .all(6),
-                      decoration: BoxDecoration(
-                        color: !Store.isLightMode.value ? Colors.transparent : Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff64666D),
-                        borderRadius: .circular(10),
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'assets/icons/${Store.isLightMode.value ? '' : 'dark_'}light.svg',
+                          width: 12,
+                          height: 12,
+                        ),
                       ),
-                      child: SvgPicture.asset('assets/icons/${Store.isLightMode.value ? '' : 'dark_'}light.svg', fit: .cover),
                     ),
                   ),
                 ),

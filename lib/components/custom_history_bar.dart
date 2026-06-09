@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ion/components/history/history_tap_bar.dart';
 import 'package:ion/enums/history_tap.dart';
+import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/store.dart';
 
 import '../utils.dart';
@@ -15,8 +16,11 @@ class CustomHistoryBar extends StatefulWidget {
 }
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
+  final _listKey = GlobalKey<HistoryChatListState>();
   String selectedChatId = '';
   HistoryTap selectTap = HistoryTap.chats;
+  int _chatsCount = 0;
+  int _savedCount = 0;
 
   void changeTap(HistoryTap tap) {
     setState(() {
@@ -29,6 +33,14 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       selectedChatId = id;
     });
     Store.selectedSessionId.value = id;
+  }
+
+  Future<void> _createSession() async {
+    final session = await ChatRepository().createSession();
+    if (session == null) return;
+    await _listKey.currentState?.reload();
+    Store.selectedSessionTitle.value = session.title;
+    changeChat(session.sessionId);
   }
 
   @override
@@ -63,16 +75,24 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
                  ],
                ),
                HistoryTapBar(
-                 changeTap: (tap) => changeTap(tap),
+                 changeTap: changeTap,
                  selectTap: selectTap,
+                 chatsCount: _chatsCount,
+                 savedCount: _savedCount,
                ),
                searchFilterBar(),
              ],
            ),
           ),
           HistoryChatList(
+            key: _listKey,
             selectedChatId: selectedChatId,
             changeChat: changeChat,
+            selectTap: selectTap,
+            onCountsChanged: (chats, saved) => setState(() {
+              _chatsCount = chats;
+              _savedCount = saved;
+            }),
           ),
         ],
       ),
@@ -137,15 +157,18 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     child: SvgPicture.asset('assets/icons/search_filter.svg',),
   );
 
-  Widget newBtn() => Container(
-    padding: EdgeInsets.all(10),
-    width: 38,
-    height: 38,
-    decoration: BoxDecoration(
-      color: Color(0xff23C69E),
-      borderRadius: .circular(10),
+  Widget newBtn() => GestureDetector(
+    onTap: _createSession,
+    child: Container(
+      padding: EdgeInsets.all(10),
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: Color(0xff23C69E),
+        borderRadius: .circular(10),
+      ),
+      child: SvgPicture.asset('assets/icons/add.svg'),
     ),
-    child: SvgPicture.asset('assets/icons/add.svg'),
   );
 
   Widget menuBtn() => Container(

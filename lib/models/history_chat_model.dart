@@ -15,6 +15,15 @@ class HistoryChatModel {
     required this.content,
   });
 
+  HistoryChatModel copyWith({bool? isSaved}) => HistoryChatModel(
+        id: id,
+        isPinned: isPinned,
+        isSaved: isSaved ?? this.isSaved,
+        lastMessageAt: lastMessageAt,
+        title: title,
+        content: content,
+      );
+
   String get displayTime {
     final now = DateTime.now();
 

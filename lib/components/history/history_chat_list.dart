@@ -1,29 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:ion/enums/history_tap.dart';
 import 'package:ion/models/history_chat_model.dart';
 import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/models/chat_session_model.dart';
 import 'package:ion/store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryChatList extends StatefulWidget {
   const HistoryChatList({
     super.key,
     required this.selectedChatId,
     required this.changeChat,
+    required this.selectTap,
+    this.onCountsChanged,
   });
 
   final String selectedChatId;
   final Function(String) changeChat;
+  final HistoryTap selectTap;
+  final void Function(int chats, int saved)? onCountsChanged;
 
   @override
-  State<HistoryChatList> createState() => _HistoryChatListState();
+  State<HistoryChatList> createState() => HistoryChatListState();
 }
 
-class _HistoryChatListState extends State<HistoryChatList> {
+class HistoryChatListState extends State<HistoryChatList> {
   final _chatRepository = ChatRepository();
-  final List<HistoryChatModel> historyChats = [];
+  final List<HistoryChatModel> _allChats = [];
   bool _isLoading = false;
   bool _hasError = false;
+  String? _hoveredId;
+  String? _popupOpenId; // 팝업이 열린 아이템 ID — 팝업 중 버튼이 트리에서 제거되는 것 방지
+
+  List<HistoryChatModel> get _displayedChats => widget.selectTap == HistoryTap.saved
+      ? _allChats.where((c) => c.isSaved).toList()
+      : _allChats;
 
   @override
   void initState() {
@@ -31,21 +43,52 @@ class _HistoryChatListState extends State<HistoryChatList> {
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSessions());
   }
 
+  Future<void> reload() => _loadSessions();
+
+  @override
+  void didUpdateWidget(HistoryChatList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectTap != widget.selectTap) setState(() {});
+  }
+
+  void _notifyCounts() {
+    widget.onCountsChanged?.call(
+      _allChats.length,
+      _allChats.where((c) => c.isSaved).length,
+    );
+  }
+
+  static const _savedKey = 'savedSessionIds';
+
+  Future<List<String>> _getSavedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_savedKey) ?? [];
+  }
+
+  Future<void> _setSavedIds(List<String> ids) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_savedKey, ids);
+  }
+
   Future<void> _loadSessions() async {
     setState(() {
       _isLoading = true;
       _hasError = false;
     });
-
     try {
-      final sessions = await _chatRepository.getSessions();
-      final mapped = sessions.map(_sessionToModel).toList();
+      final results = await Future.wait([
+        _chatRepository.getSessions(),
+        _getSavedIds(),
+      ]);
+      final sessions = results[0] as List<ChatSession>;
+      final savedIds = results[1] as List<String>;
       setState(() {
-        historyChats
+        _allChats
           ..clear()
-          ..addAll(mapped);
+          ..addAll(sessions.map((s) => _sessionToModel(s, savedIds)));
         _isLoading = false;
       });
+      _notifyCounts();
     } catch (_) {
       setState(() {
         _isLoading = false;
@@ -54,28 +97,67 @@ class _HistoryChatListState extends State<HistoryChatList> {
     }
   }
 
-  HistoryChatModel _sessionToModel(ChatSession s) => HistoryChatModel(
+  HistoryChatModel _sessionToModel(ChatSession s, List<String> savedIds) =>
+      HistoryChatModel(
         id: s.sessionId,
         isPinned: false,
-        isSaved: false,
+        isSaved: savedIds.contains(s.sessionId),
         lastMessageAt: DateTime.tryParse(s.lastActiveAt) ?? DateTime.now(),
         title: s.title,
         content: '',
       );
+
+  Future<void> _toggleSave(HistoryChatModel chat) async {
+    final idx = _allChats.indexWhere((c) => c.id == chat.id);
+    if (idx == -1) return;
+    final newSaved = !chat.isSaved;
+    setState(() => _allChats[idx] = chat.copyWith(isSaved: newSaved));
+    final savedIds = await _getSavedIds();
+    if (newSaved) {
+      if (!savedIds.contains(chat.id)) savedIds.add(chat.id);
+    } else {
+      savedIds.remove(chat.id);
+    }
+    await _setSavedIds(savedIds);
+    _notifyCounts();
+  }
+
+  Future<void> _deleteSession(HistoryChatModel chat) async {
+    // 낙관적 삭제: 즉시 목록에서 제거
+    final idx = _allChats.indexWhere((c) => c.id == chat.id);
+    setState(() => _allChats.removeWhere((c) => c.id == chat.id));
+    if (Store.selectedSessionId.value == chat.id) {
+      Store.selectedSessionId.value = '';
+      Store.selectedSessionTitle.value = '';
+    }
+    _notifyCounts();
+
+    final ok = await _chatRepository.deleteSession(chat.id);
+    if (!mounted) return;
+    if (!ok) {
+      // API 실패 시 복구
+      if (idx != -1) setState(() => _allChats.insert(idx, chat));
+      _notifyCounts();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.')),
+      );
+      return;
+    }
+
+    // 저장 목록에서도 제거
+    final savedIds = await _getSavedIds();
+    if (savedIds.remove(chat.id)) await _setSavedIds(savedIds);
+  }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Expanded(
         child: Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF10A37F),
-            strokeWidth: 2,
-          ),
+          child: CircularProgressIndicator(color: Color(0xFF10A37F), strokeWidth: 2),
         ),
       );
     }
-
     if (_hasError) {
       return Expanded(
         child: Center(
@@ -83,133 +165,171 @@ class _HistoryChatListState extends State<HistoryChatList> {
             mainAxisSize: MainAxisSize.min,
             spacing: 12,
             children: [
-              Text(
-                '목록을 불러오지 못했습니다.',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: Store.isLightMode.value
-                      ? const Color(0xFF9F9F9F)
-                      : const Color(0xFFABABAB),
-                ),
-              ),
+              Text('목록을 불러오지 못했습니다.',
+                  style: TextStyle(
+                      fontSize: 13,
+                      color: Store.isLightMode.value
+                          ? const Color(0xFF9F9F9F)
+                          : const Color(0xFFABABAB))),
               GestureDetector(
                 onTap: _loadSessions,
-                child: Text(
-                  '다시 시도',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: const Color(0xFF10A37F),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
+                child: const Text('다시 시도',
+                    style: TextStyle(
+                        fontSize: 13,
+                        color: Color(0xFF10A37F),
+                        fontWeight: FontWeight.w600)),
               ),
             ],
           ),
         ),
       );
     }
-
-    if (historyChats.isEmpty) {
+    if (_displayedChats.isEmpty) {
       return Expanded(
         child: Center(
           child: Text(
-            '대화 기록이 없습니다.',
+            widget.selectTap == HistoryTap.saved ? '저장된 대화가 없습니다.' : '대화 기록이 없습니다.',
             style: TextStyle(
-              fontSize: 13,
-              color: Store.isLightMode.value
-                  ? const Color(0xFF9F9F9F)
-                  : const Color(0xFFABABAB),
-            ),
+                fontSize: 13,
+                color: Store.isLightMode.value
+                    ? const Color(0xFF9F9F9F)
+                    : const Color(0xFFABABAB)),
           ),
         ),
       );
     }
-
     return Expanded(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 6),
         child: ListView.separated(
-          itemCount: historyChats.length,
-          separatorBuilder: (_, _) => const SizedBox(height: 10),
-          itemBuilder: (_, index) => chatItem(historyChats[index]),
+          itemCount: _displayedChats.length,
+          separatorBuilder: (_, i) => const SizedBox(height: 10),
+          itemBuilder: (_, index) => _chatItem(_displayedChats[index]),
         ),
       ),
     );
   }
 
-  Widget chatItem(HistoryChatModel chat) {
+  Widget _chatItem(HistoryChatModel chat) {
     final isSelected = widget.selectedChatId == chat.id;
+    final isHovered = _hoveredId == chat.id || _popupOpenId == chat.id;
 
-    Color selectedBackground = Store.isLightMode.value
+    final selectedBg = Store.isLightMode.value
         ? const Color(0xFFE3FEF7)
         : const Color(0xFF1E1F22);
-    Color titleColor = Store.isLightMode.value
+    final titleColor = Store.isLightMode.value
         ? const Color(0xFF1E1F22)
         : const Color(0xFFEEEEEE);
-    Color dateColor = Store.isLightMode.value
+    final dateColor = Store.isLightMode.value
         ? const Color(0xFF9F9F9F)
         : const Color(0x99ABABAB);
 
-    return GestureDetector(
-      onTap: () => widget.changeChat(chat.id),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        width: double.infinity,
-        height: 68,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
-          color: isSelected ? selectedBackground : Colors.transparent,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: SizedBox(
-                width: 15,
-                height: 15,
-                child: chat.isPinned
-                    ? SvgPicture.asset('assets/icons/union.svg')
-                    : null,
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hoveredId = chat.id),
+      onExit: (_) => setState(() {
+        if (_hoveredId == chat.id) _hoveredId = null;
+      }),
+      child: GestureDetector(
+        onTap: () {
+          Store.selectedSessionTitle.value = chat.title;
+          widget.changeChat(chat.id);
+        },
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          width: double.infinity,
+          height: 68,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(10),
+            color: isSelected ? selectedBg : Colors.transparent,
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: SizedBox(
+                  width: 15,
+                  height: 15,
+                  child: chat.isPinned
+                      ? SvgPicture.asset('assets/icons/union.svg')
+                      : null,
+                ),
               ),
-            ),
-            Expanded(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 4,
-                children: [
-                  Row(
-                    spacing: 10,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          chat.title,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: titleColor,
-                            fontWeight: FontWeight.w600,
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  spacing: 4,
+                  children: [
+                    Row(
+                      spacing: 6,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            chat.title,
+                            style: TextStyle(
+                                fontSize: 15,
+                                color: titleColor,
+                                fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
                           ),
-                          overflow: TextOverflow.ellipsis,
                         ),
-                      ),
-                      Text(
-                        chat.displayTime,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: dateColor,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                        if (isHovered)
+                          _moreButton(chat, titleColor)
+                        else
+                          Text(chat.displayTime,
+                              style: TextStyle(
+                                  fontSize: 12,
+                                  color: dateColor,
+                                  fontWeight: FontWeight.w400)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(width: 16),
-          ],
+              const SizedBox(width: 16),
+            ],
+          ),
         ),
       ),
+    );
+  }
+
+  Widget _moreButton(HistoryChatModel chat, Color iconColor) {
+    return PopupMenuButton<String>(
+      padding: EdgeInsets.zero,
+      icon: Icon(Icons.more_horiz, size: 18, color: iconColor),
+      iconSize: 18,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      color: Store.isLightMode.value ? Colors.white : const Color(0xFF3F424A),
+      elevation: 4,
+      onOpened: () => setState(() => _popupOpenId = chat.id),
+      onCanceled: () => setState(() => _popupOpenId = null),
+      itemBuilder: (_) => [
+        PopupMenuItem(
+          value: 'save',
+          height: 36,
+          child: Text(
+            chat.isSaved ? '저장 해제' : '저장',
+            style: TextStyle(
+                fontSize: 13,
+                color: Store.isLightMode.value
+                    ? const Color(0xFF1E1F22)
+                    : const Color(0xFFEEEEEE)),
+          ),
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          height: 36,
+          child: const Text('삭제',
+              style: TextStyle(fontSize: 13, color: Color(0xFFE53935))),
+        ),
+      ],
+      onSelected: (value) {
+        setState(() => _popupOpenId = null);
+        if (value == 'save') _toggleSave(chat);
+        if (value == 'delete') _deleteSession(chat);
+      },
     );
   }
 }

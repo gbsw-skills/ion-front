@@ -14,17 +14,37 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  static const _breakpoint = 750.0;
+
+  @override
+  void initState() {
+    super.initState();
+    Store.isLightMode.addListener(_onThemeChanged);
+  }
+
+  @override
+  void dispose() {
+    Store.isLightMode.removeListener(_onThemeChanged);
+    super.dispose();
+  }
+
+  void _onThemeChanged() => setState(() {});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-    backgroundColor: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff282A2E),
-      body: Row(
-        children: [
-          CustomSideBar(),
-          CustomHistoryBar(),
-          ChatScreen(),
-        ],
+      backgroundColor: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff282A2E),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final showSidebars = constraints.maxWidth >= _breakpoint;
+          return Row(
+            children: [
+              if (showSidebars) CustomSideBar(),
+              if (showSidebars) CustomHistoryBar(),
+              ChatScreen(),
+            ],
+          );
+        },
       ),
     );
   }

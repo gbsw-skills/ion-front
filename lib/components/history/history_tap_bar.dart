@@ -12,18 +12,20 @@ class HistoryTapBar extends StatefulWidget {
     super.key,
     required this.selectTap,
     required this.changeTap,
+    required this.chatsCount,
+    required this.savedCount,
   });
 
   final HistoryTap selectTap;
   final Function(HistoryTap) changeTap;
+  final int chatsCount;
+  final int savedCount;
 
   @override
   State<HistoryTapBar> createState() => _HistoryTapBarState();
 }
 
 class _HistoryTapBarState extends State<HistoryTapBar> {
-  int chatsValue = 24;
-  int savedValue = 24;
 
   @override
   Widget build(BuildContext context) {
@@ -99,8 +101,8 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
           ),
           Row(
             children: [
-              historyTabItem('chat_filled', HistoryTap.chats, chatsValue),
-              historyTabItem('flag_filled', HistoryTap.saved, chatsValue),
+              historyTabItem('chat_filled', HistoryTap.chats, widget.chatsCount),
+              historyTabItem('flag_filled', HistoryTap.saved, widget.savedCount),
             ],
           ),
         ],

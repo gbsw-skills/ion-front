@@ -6,6 +6,7 @@ class Store {
   static ValueNotifier<bool> isLightMode = ValueNotifier(true);
   static ValueNotifier<int> selectedChatIndex = ValueNotifier(0);
   static ValueNotifier<String> selectedSessionId = ValueNotifier('');
+  static ValueNotifier<String> selectedSessionTitle = ValueNotifier('');
   static int currentIndex = 0;
   static String baseUrl = 'http://ion.gbsw.hs.kr/api/v1';
   static List<String> tabBarList = ['chat', 'filter', 'compass', 'settings'];
