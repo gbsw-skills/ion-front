@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:ion/store.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthRepository {
   Future<String> login(String username, String password) async {
@@ -19,6 +20,9 @@ class AuthRepository {
       final responseData = jsonDecode(response.body);
       Store.token = responseData['data']['accessToken'];
       Store.refreshToken = responseData['data']['refreshToken'];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accessToken', Store.token);
+      await prefs.setString('refreshToken', Store.refreshToken);
       return 'success'; // 성공
     }
     if (response.statusCode == 401) {
@@ -39,6 +43,9 @@ class AuthRepository {
       final responseData = jsonDecode(response.body);
       Store.token = responseData['data']['accessToken'];
       Store.refreshToken = responseData['data']['refreshToken'];
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('accessToken', Store.token);
+      await prefs.setString('refreshToken', Store.refreshToken);
       return 'success'; // 성공
     }
     if (response.statusCode == 401) {
@@ -55,6 +62,10 @@ class AuthRepository {
           'Authorization': 'Bearer ${Store.token}'
         }
     );
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('accessToken');
+    await prefs.remove('refreshToken');
 
     if (response.statusCode == 200) {
       return 'success'; // 성공

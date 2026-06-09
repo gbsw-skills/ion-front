@@ -15,7 +15,7 @@ class CustomHistoryBar extends StatefulWidget {
 }
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
-  int selectedChatId = 0; // 나중에 좀 더 상위단으로 올려야 할듯
+  String selectedChatId = '';
   HistoryTap selectTap = HistoryTap.chats;
 
   void changeTap(HistoryTap tap) {
@@ -24,10 +24,11 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     });
   }
 
-  void changeChat(int id) {
+  void changeChat(String id) {
     setState(() {
       selectedChatId = id;
     });
+    Store.selectedSessionId.value = id;
   }
 
   @override
@@ -71,7 +72,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
           ),
           HistoryChatList(
             selectedChatId: selectedChatId,
-            changeChat: (id) => changeChat(id),
+            changeChat: changeChat,
           ),
         ],
       ),

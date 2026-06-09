@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
 import '../models/chat_model.dart';
@@ -14,31 +15,27 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   final TextEditingController _chatController = TextEditingController();
-  ChatRoomModel? chatData;
+
+  ChatRoomModel get _chatData => Store.chatList[Store.selectedChatIndex.value];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      loadChat();
-    },);
+    Store.selectedChatIndex.addListener(_onChatChanged);
   }
 
   @override
   void dispose() {
+    Store.selectedChatIndex.removeListener(_onChatChanged);
     _chatController.dispose();
     super.dispose();
   }
 
-  Future<void> loadChat() async {
-    setState(() {
-      chatData = Store.chatList[0];
-    });
-  }
+  void _onChatChanged() => setState(() {});
 
   Future<void> sendChat(String message) async {
     setState(() {
-      chatData?.chatList.insert(0, ChatModel(isMine: true, content: message));
+      _chatData.chatList.insert(0, ChatModel(isMine: true, content: message));
     });
   }
 
@@ -52,7 +49,7 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 27),
-                child: Text(chatData?.title ?? '', style: TextStyle(
+                child: Text(_chatData.title, style: TextStyle(
                   fontSize: 22,
                   color: Store.isLightMode.value
                       ? Color(0xFF1E1F22)
@@ -198,12 +195,101 @@ class _ChatScreenState extends State<ChatScreen> {
                   : darkBackground,
               borderRadius: .circular(10)
           ),
-          child: Text(chat.content, style: TextStyle(
-            fontSize: 14,
-            color: Store.isLightMode.value
-                ? Color(0xFF1E1F22)
-                : Color(0xFFEEEEEE),
-          ),),
+          child: chat.isMine
+              ? Text(chat.content, style: TextStyle(
+                  fontSize: 14,
+                  color: Store.isLightMode.value
+                      ? Color(0xFF1E1F22)
+                      : Color(0xFFEEEEEE),
+                ),)
+              : MarkdownBody(
+                  data: chat.content,
+                  styleSheet: MarkdownStyleSheet(
+                    p: TextStyle(
+                      fontSize: 14,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    h1: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    h2: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    h3: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    strong: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    em: TextStyle(
+                      fontStyle: FontStyle.italic,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                    code: TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 13,
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFE6EDF3),
+                      backgroundColor: Colors.transparent,
+                    ),
+                    codeblockDecoration: BoxDecoration(
+                      color: Store.isLightMode.value
+                          ? Color(0xFFF0F0F0)
+                          : Color(0xFF161B22),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: Store.isLightMode.value
+                            ? Color(0xFFD0D7DE)
+                            : Color(0xFF30363D),
+                        width: 1,
+                      ),
+                    ),
+                    codeblockPadding: EdgeInsets.all(16),
+                    horizontalRuleDecoration: BoxDecoration(
+                      border: Border(
+                        top: BorderSide(
+                          color: Store.isLightMode.value
+                              ? Color(0xFFD0D0D0)
+                              : Color(0xFF4A4F5E),
+                          width: 1.5,
+                        ),
+                      ),
+                    ),
+                    blockquoteDecoration: BoxDecoration(
+                      border: Border(
+                        left: BorderSide(
+                          color: Color(0xFF10A37F),
+                          width: 4,
+                        ),
+                      ),
+                    ),
+                    listBullet: TextStyle(
+                      color: Store.isLightMode.value
+                          ? Color(0xFF1E1F22)
+                          : Color(0xFFEEEEEE),
+                    ),
+                  ),
+                ),
         ),
         Transform.translate(
           offset: Offset(-30, -30),
@@ -241,11 +327,11 @@ class _ChatScreenState extends State<ChatScreen> {
     child: ListView.separated(
       reverse: true,
       padding: .only(top: 60, bottom: 130, left: 30, right: 30),
-      itemCount: (chatData?.chatList ?? []).length,
+      itemCount: _chatData.chatList.length,
       scrollDirection: .vertical,
       separatorBuilder: (context, index) => SizedBox(height: 64),
       itemBuilder: (context, index) {
-        final chat = chatData!.chatList[index];
+        final chat = _chatData.chatList[index];
 
         return Center(
           child: Container(

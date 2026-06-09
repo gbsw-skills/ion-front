@@ -1,5 +1,5 @@
 class HistoryChatModel {
-  final int id;
+  final String id;
   final bool isPinned;
   final bool isSaved;
   final DateTime lastMessageAt;
@@ -7,7 +7,7 @@ class HistoryChatModel {
   final String content;
 
   HistoryChatModel({
-    required this.id,
+    required this.id, // sessionId (UUID)
     required this.isPinned,
     required this.isSaved,
     required this.lastMessageAt,

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:ion/repositories/auth_repository.dart';
+import 'package:ion/screens/login_screen.dart';
 
 import '../store.dart';
 import '../utils.dart';
@@ -12,6 +14,15 @@ class CustomSideBar extends StatefulWidget {
 }
 
 class _CustomSideBarState extends State<CustomSideBar> {
+  Future<void> _logout() async {
+    await AuthRepository().logout();
+    if (!mounted) return;
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (_) => false,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -33,15 +44,18 @@ class _CustomSideBarState extends State<CustomSideBar> {
           SizedBox(height: 24),
           button('settings', 3),
           Spacer(),
-          Container(
-            width: 38,
-            height: 38,
-            padding: .all(8),
-            decoration: BoxDecoration(
-              color: Store.isLightMode.value ? Color(0xffF9F9F9) : Color(0xff2D2E31),
-              borderRadius: .circular(10),
+          GestureDetector(
+            onTap: _logout,
+            child: Container(
+              width: 38,
+              height: 38,
+              padding: .all(8),
+              decoration: BoxDecoration(
+                color: Store.isLightMode.value ? Color(0xffF9F9F9) : Color(0xff2D2E31),
+                borderRadius: .circular(10),
+              ),
+              child: SvgPicture.asset('assets/icons/exit.svg'),
             ),
-            child: SvgPicture.asset('assets/icons/exit.svg'),
           ),
           SizedBox(height: 14),
           Divider(color: Store.isLightMode.value ? Color(0xffEAEAEA) : Color(0xff2D2E30), indent: 22, endIndent: 22, radius: .circular(100), thickness: 2),
