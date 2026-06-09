@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:ion/repositories/auth_repository.dart';
+import 'package:ion/screens/admin_page.dart';
 import 'package:ion/screens/home_page.dart';
 import 'package:ion/screens/login_screen.dart';
 import 'package:ion/store.dart';
@@ -15,6 +17,9 @@ void main() async {
       valueListenable: Store.isLightMode,
       builder: (context, value, child) {
         return MaterialApp(
+          theme: ThemeData(
+            // textTheme: GoogleFonts.notoSansKrTextTheme(),
+          ),
           debugShowCheckedModeBanner: false,
           home: initialScreen,
         );
@@ -34,15 +39,18 @@ Future<Widget> _resolveInitialScreen() async {
 
   Store.token = accessToken;
   Store.refreshToken = refreshToken;
+  Store.userRole = prefs.getString('userRole') ?? '';
+  Store.displayName = prefs.getString('displayName') ?? '';
+  Store.username = prefs.getString('username') ?? '';
 
-  // refreshToken으로 토큰 갱신을 시도해 유효성 확인
   final result = await AuthRepository().refresh();
   if (result == 'success') {
-    return const HomePage();
+    return Store.userRole == 'ADMIN' ? const AdminPage() : const HomePage();
   }
 
-  // 토큰이 만료됐으면 저장된 값 삭제 후 로그인 화면으로
   await prefs.remove('accessToken');
   await prefs.remove('refreshToken');
+  await prefs.remove('userRole');
+  await prefs.remove('displayName');
   return const LoginScreen();
 }

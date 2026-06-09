@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ion/repositories/auth_repository.dart';
+import 'package:ion/screens/admin_page.dart';
 import 'package:ion/screens/home_page.dart';
 import 'package:ion/store.dart';
 
@@ -45,8 +46,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (result == 'success') {
+      final dest = Store.userRole == 'ADMIN' ? const AdminPage() : const HomePage();
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomePage()),
+        MaterialPageRoute(builder: (_) => dest),
       );
     } else {
       setState(() {

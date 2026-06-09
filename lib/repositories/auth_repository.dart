@@ -18,11 +18,18 @@ class AuthRepository {
 
     if (response.statusCode == 200) {
       final responseData = jsonDecode(response.body);
-      Store.token = responseData['data']['accessToken'];
-      Store.refreshToken = responseData['data']['refreshToken'];
+      final data = responseData['data'];
+      Store.token = data['accessToken'];
+      Store.refreshToken = data['refreshToken'];
+      Store.userRole = data['user']['role'] ?? '';
+      Store.displayName = data['user']['displayName'] ?? '';
+      Store.username = data['user']['username'] ?? '';
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString('accessToken', Store.token);
       await prefs.setString('refreshToken', Store.refreshToken);
+      await prefs.setString('userRole', Store.userRole);
+      await prefs.setString('displayName', Store.displayName);
+      await prefs.setString('username', Store.username);
       return 'success'; // 성공
     }
     if (response.statusCode == 401) {
@@ -63,9 +70,15 @@ class AuthRepository {
         }
     );
 
+    Store.userRole = '';
+    Store.displayName = '';
+    Store.username = '';
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('accessToken');
     await prefs.remove('refreshToken');
+    await prefs.remove('userRole');
+    await prefs.remove('displayName');
+    await prefs.remove('username');
 
     if (response.statusCode == 200) {
       return 'success'; // 성공

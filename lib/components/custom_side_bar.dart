@@ -152,10 +152,10 @@ class _CustomSideBarState extends State<CustomSideBar> {
   }
 
   Widget button(String iconName, int index) {
-    bool isSelected = Store.currentIndex == index;
+    bool isSelected = Store.currentIndex.value == index;
 
     return GestureDetector(
-      onTap: () => setState(() => Store.currentIndex = index),
+      onTap: () => setState(() => Store.currentIndex.value = index),
       child: Container(
         width: 38,
         height: 38,
