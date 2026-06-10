@@ -116,7 +116,10 @@ class AppColors {
       Store.isLightMode.value ? Color(0xFF3B3B3B) : Color(0xFFEEEEEE);
 
   static Color get adminBackground =>
-      Store.isLightMode.value ? Color(0xFFF5F6FA) : Color(0xFF1E1F22);
+      Store.isLightMode.value ? Color(0xFFF3F4F8) : Color(0xFF282A2E);
+
+  static Color get adminNavSelected =>
+      accent.withValues(alpha: Store.isLightMode.value ? 0.10 : 0.18);
 
   static Color get dangerText =>
       Store.isLightMode.value ? Color(0xFFE53935) : Color(0xFFFF6B6B);

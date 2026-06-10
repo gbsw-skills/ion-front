@@ -57,8 +57,8 @@ class _AdminPageState extends State<AdminPage> {
   Widget _topBar() => Container(
     height: 60,
     decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
-      border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
+      color: AppColors.sidebarBackground,
+      border: Border(bottom: BorderSide(color: AppColors.sidebarBorder)),
     ),
     padding: EdgeInsets.symmetric(horizontal: 28),
     child: Row(
@@ -96,7 +96,9 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ),
         SizedBox(width: 16),
-        Container(width: 1, height: 18, color: AppColors.cardDivider),
+        ThemeTogglePill(axis: Axis.horizontal),
+        SizedBox(width: 16),
+        Container(width: 1, height: 18, color: AppColors.sidebarBorder),
         SizedBox(width: 16),
         TextButton(
           onPressed: _logout,
@@ -117,8 +119,8 @@ class _AdminPageState extends State<AdminPage> {
   Widget _sideNav() => Container(
     width: 220,
     decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
-      border: Border(right: BorderSide(color: AppColors.cardDivider)),
+      color: AppColors.sidebarBackground,
+      border: Border(right: BorderSide(color: AppColors.sidebarBorder)),
     ),
     padding: EdgeInsets.symmetric(vertical: 24, horizontal: 14),
     child: Column(
@@ -155,14 +157,11 @@ class _AdminPageState extends State<AdminPage> {
     final selected = _section == section;
     return GestureDetector(
       onTap: () => setState(() => _section = section),
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 120),
+      child: Container(
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: selected
-              ? AppColors.historyItemSelectedBackground
-              : Colors.transparent,
+          color: selected ? AppColors.adminNavSelected : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -261,9 +260,9 @@ class _NoticesSectionState extends State<_NoticesSection> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceBackground,
+        color: AppColors.dialogBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.cardDivider),
+        border: Border.all(color: AppColors.sidebarBorder),
       ),
       child: Row(
         children: [
@@ -462,7 +461,7 @@ class _NoticeDetailDialog extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: AppColors.textMuted),
             ),
             SizedBox(height: 20),
-            Divider(height: 1, color: AppColors.cardDivider),
+            Divider(height: 1, color: AppColors.sidebarBorder),
             SizedBox(height: 20),
             Flexible(
               child: SingleChildScrollView(
@@ -544,16 +543,16 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
   Widget _docCard(DocumentItem d) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
+      color: AppColors.dialogBackground,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.cardDivider),
+      border: Border.all(color: AppColors.sidebarBorder),
     ),
     child: Row(
       children: [
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.cardDivider,
+            color: AppColors.adminBackground,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -811,11 +810,11 @@ class _LlmSectionState extends State<_LlmSection> {
   Widget _endpointCard(LlmEndpoint ep) => Container(
     padding: EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
+      color: AppColors.dialogBackground,
       borderRadius: BorderRadius.circular(12),
       border: ep.isDefault
           ? Border.all(color: AppColors.accent, width: 1.5)
-          : Border.all(color: AppColors.cardDivider),
+          : Border.all(color: AppColors.sidebarBorder),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1266,9 +1265,9 @@ class _LogsSectionState extends State<_LogsSection> {
   Widget _logCard(LogItem l) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
+      color: AppColors.dialogBackground,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.cardDivider),
+      border: Border.all(color: AppColors.sidebarBorder),
     ),
     child: Row(
       spacing: 16,
@@ -1313,8 +1312,8 @@ class _SectionScaffold extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: AppColors.surfaceBackground,
-            border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
+            color: AppColors.sidebarBackground,
+            border: Border(bottom: BorderSide(color: AppColors.sidebarBorder)),
           ),
           padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           child: Row(
