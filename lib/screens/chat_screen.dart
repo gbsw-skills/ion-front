@@ -23,15 +23,21 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    Store.isLightMode.addListener(_rebuild);
     Store.selectedSessionId.addListener(_onSessionChanged);
+    // 탭 전환 후 재생성 시 이미 선택된 세션의 메시지를 복원
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadMessages());
   }
 
   @override
   void dispose() {
+    Store.isLightMode.removeListener(_rebuild);
     Store.selectedSessionId.removeListener(_onSessionChanged);
     _chatController.dispose();
     super.dispose();
   }
+
+  void _rebuild() => setState(() {});
 
   void _onSessionChanged() {
     setState(() => _messages = []);
