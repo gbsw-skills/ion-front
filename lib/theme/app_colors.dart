@@ -108,4 +108,21 @@ class AppColors {
 
   static Color get tabUnselectedText =>
       Store.isLightMode.value ? Color(0xFF3B3B3B) : Color(0xFFEEEEEE);
+
+  static Color get adminBackground =>
+      Store.isLightMode.value ? Color(0xFFF5F6FA) : Color(0xFF1E1F22);
+
+  static Color get dangerText =>
+      Store.isLightMode.value ? Color(0xFFE53935) : Color(0xFFFF6B6B);
+
+  static Color get borderMuted =>
+      Store.isLightMode.value ? Color(0xFFD1D5DB) : Color(0xFF4A4F5E);
+
+  static Color get infoBadge =>
+      Store.isLightMode.value ? Color(0xFF3B82F6) : Color(0xFF60A5FA);
+
+  static Color get warningBadge =>
+      Store.isLightMode.value ? Color(0xFFF59E0B) : Color(0xFFFBBF24);
+
+  static final Color deleteButton = Color(0xFFEF4444);
 }

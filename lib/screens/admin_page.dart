@@ -4,6 +4,7 @@ import 'package:ion/repositories/admin_repository.dart';
 import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/login_screen.dart';
 import 'package:ion/store.dart';
+import 'package:ion/theme/app_colors.dart';
 
 enum _AdminSection { notices, documents, logs, llm }
 
@@ -19,9 +20,23 @@ class _AdminPageState extends State<AdminPage> {
   _AdminSection _section = _AdminSection.notices;
 
   @override
+  void initState() {
+    super.initState();
+    Store.isLightMode.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    Store.isLightMode.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F6FA),
+      backgroundColor: AppColors.adminBackground,
       body: Column(
         children: [
           _topBar(),
@@ -40,7 +55,7 @@ class _AdminPageState extends State<AdminPage> {
 
   Widget _topBar() => Container(
     height: 56,
-    color: Colors.white,
+    color: AppColors.surfaceBackground,
     padding: EdgeInsets.symmetric(horizontal: 28),
     child: Row(
       children: [
@@ -49,20 +64,20 @@ class _AdminPageState extends State<AdminPage> {
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.bold,
-            color: Color(0xFF1E1F22),
+            color: AppColors.textPrimary,
           ),
         ),
         Spacer(),
         Text(
           Store.displayName,
-          style: TextStyle(fontSize: 14, color: Color(0xFF6B7280)),
+          style: TextStyle(fontSize: 14, color: AppColors.paginationText),
         ),
         SizedBox(width: 16),
         TextButton(
           onPressed: _logout,
           child: Text(
             '로그아웃',
-            style: TextStyle(fontSize: 13, color: Color(0xFFE53935)),
+            style: TextStyle(fontSize: 13, color: AppColors.dangerText),
           ),
         ),
       ],
@@ -71,7 +86,7 @@ class _AdminPageState extends State<AdminPage> {
 
   Widget _sideNav() => Container(
     width: 200,
-    color: Colors.white,
+    color: AppColors.surfaceBackground,
     padding: EdgeInsets.symmetric(vertical: 24, horizontal: 12),
     child: Column(
       children: [
@@ -91,7 +106,9 @@ class _AdminPageState extends State<AdminPage> {
         margin: EdgeInsets.only(bottom: 4),
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? Color(0xFFE8FAF5) : Colors.transparent,
+          color: selected
+              ? AppColors.historyItemSelectedBackground
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -100,14 +117,14 @@ class _AdminPageState extends State<AdminPage> {
             Icon(
               icon,
               size: 18,
-              color: selected ? Color(0xFF10A37F) : Color(0xFF6B7280),
+              color: selected ? AppColors.accent : AppColors.paginationText,
             ),
             Text(
               label,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-                color: selected ? Color(0xFF10A37F) : Color(0xFF374151),
+                color: selected ? AppColors.accent : AppColors.pageBtnIcon,
               ),
             ),
           ],
@@ -187,7 +204,7 @@ class _NoticesSectionState extends State<_NoticesSection> {
   Widget _noticeCard(NoticeItem n) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(10),
     ),
     child: Row(
@@ -199,24 +216,28 @@ class _NoticesSectionState extends State<_NoticesSection> {
             children: [
               Text(
                 n.title,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               Text(
                 '${n.authorName}  ·  ${_fmtDate(n.publishedAt)}',
-                style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
             ],
           ),
         ),
         _IconBtn(
           Icons.edit_outlined,
-          Color(0xFF6B7280),
+          AppColors.paginationText,
           () => _showForm(context, notice: n),
         ),
         SizedBox(width: 4),
         _IconBtn(
           Icons.delete_outline,
-          Color(0xFFEF4444),
+          AppColors.deleteButton,
           () => _confirmDelete(context, n),
         ),
       ],
@@ -368,7 +389,7 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
   Widget _docCard(DocumentItem d) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(10),
     ),
     child: Row(
@@ -376,7 +397,7 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: Color(0xFFF3F4F6),
+            color: AppColors.cardDivider,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -384,7 +405,7 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: Color(0xFF6B7280),
+              color: AppColors.paginationText,
             ),
           ),
         ),
@@ -396,18 +417,22 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
             children: [
               Text(
                 d.title,
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               Text(
                 _fmtDate(d.uploadedAt),
-                style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
               ),
             ],
           ),
         ),
         _IconBtn(
           Icons.delete_outline,
-          Color(0xFFEF4444),
+          AppColors.deleteButton,
           () => _confirmDelete(context, d),
         ),
       ],
@@ -504,8 +529,8 @@ class _UploadDialogState extends State<_UploadDialog> {
             decoration: BoxDecoration(
               border: Border.all(
                 color: _fileName != null
-                    ? Color(0xFF10A37F)
-                    : Color(0xFFD1D5DB),
+                    ? AppColors.accent
+                    : AppColors.borderMuted,
               ),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -515,8 +540,8 @@ class _UploadDialogState extends State<_UploadDialog> {
               style: TextStyle(
                 fontSize: 14,
                 color: _fileName != null
-                    ? Color(0xFF1E1F22)
-                    : Color(0xFF9CA3AF),
+                    ? AppColors.textPrimary
+                    : AppColors.textMuted,
               ),
             ),
           ),
@@ -524,7 +549,7 @@ class _UploadDialogState extends State<_UploadDialog> {
         SizedBox(height: 6),
         Text(
           '최대 50MB · PDF, DOCX',
-          style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
       ],
     );
@@ -576,7 +601,7 @@ class _LlmSectionState extends State<_LlmSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(msg),
-        backgroundColor: error ? Color(0xFFEF4444) : Color(0xFF10A37F),
+        backgroundColor: error ? AppColors.deleteButton : AppColors.accent,
       ),
     );
   }
@@ -592,13 +617,13 @@ class _LlmSectionState extends State<_LlmSection> {
             mainAxisSize: MainAxisSize.min,
             spacing: 12,
             children: [
-              Text('불러오기 실패', style: TextStyle(color: Color(0xFF9CA3AF))),
+              Text('불러오기 실패', style: TextStyle(color: AppColors.textMuted)),
               GestureDetector(
                 onTap: _load,
                 child: Text(
                   '다시 시도',
                   style: TextStyle(
-                    color: Color(0xFF10A37F),
+                    color: AppColors.accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -630,10 +655,10 @@ class _LlmSectionState extends State<_LlmSection> {
   Widget _endpointCard(LlmEndpoint ep) => Container(
     padding: EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(10),
       border: ep.isDefault
-          ? Border.all(color: Color(0xFF10A37F), width: 1.5)
+          ? Border.all(color: AppColors.accent, width: 1.5)
           : null,
     ),
     child: Column(
@@ -648,12 +673,16 @@ class _LlmSectionState extends State<_LlmSection> {
                 children: [
                   Text(
                     ep.name,
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
                   ),
-                  if (ep.isDefault) _badge('기본', Color(0xFF10A37F)),
+                  if (ep.isDefault) _badge('기본', AppColors.accent),
                   _badge(
                     ep.enabled ? '활성' : '비활성',
-                    ep.enabled ? Color(0xFF3B82F6) : Color(0xFF9CA3AF),
+                    ep.enabled ? AppColors.infoBadge : AppColors.textMuted,
                   ),
                 ],
               ),
@@ -663,7 +692,7 @@ class _LlmSectionState extends State<_LlmSection> {
               message: ep.enabled ? '비활성화' : '활성화',
               child: _IconBtn(
                 ep.enabled ? Icons.toggle_on : Icons.toggle_off,
-                ep.enabled ? Color(0xFF3B82F6) : Color(0xFFD1D5DB),
+                ep.enabled ? AppColors.infoBadge : AppColors.borderMuted,
                 () => _toggleEnabled(ep),
               ),
             ),
@@ -672,18 +701,18 @@ class _LlmSectionState extends State<_LlmSection> {
               message: ep.isDefault ? '기본 엔드포인트' : '기본값으로 설정',
               child: _IconBtn(
                 ep.isDefault ? Icons.star : Icons.star_outline,
-                ep.isDefault ? Color(0xFFF59E0B) : Color(0xFFD1D5DB),
+                ep.isDefault ? AppColors.warningBadge : AppColors.borderMuted,
                 ep.isDefault ? () {} : () => _setDefault(ep),
               ),
             ),
             _IconBtn(
               Icons.edit_outlined,
-              Color(0xFF6B7280),
+              AppColors.paginationText,
               () => _showForm(context, endpoint: ep),
             ),
             _IconBtn(
               Icons.delete_outline,
-              Color(0xFFEF4444),
+              AppColors.deleteButton,
               () => _confirmDelete(context, ep),
             ),
           ],
@@ -719,7 +748,7 @@ class _LlmSectionState extends State<_LlmSection> {
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Color(0xFF9CA3AF),
+            color: AppColors.textMuted,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -729,7 +758,7 @@ class _LlmSectionState extends State<_LlmSection> {
           value,
           maxLines: maxLines,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(fontSize: 13, color: Color(0xFF374151)),
+          style: TextStyle(fontSize: 13, color: AppColors.pageBtnIcon),
         ),
       ),
     ],
@@ -900,7 +929,7 @@ class _LlmFormDialogState extends State<_LlmFormDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.dialogBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: 540,
@@ -912,7 +941,11 @@ class _LlmFormDialogState extends State<_LlmFormDialog> {
             children: [
               Text(
                 widget.endpoint == null ? '새 엔드포인트 등록' : '엔드포인트 수정',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
               SizedBox(height: 24),
               _FormField(label: '이름 *', controller: _name),
@@ -971,13 +1004,13 @@ class _LlmFormDialogState extends State<_LlmFormDialog> {
                     onPressed: () => Navigator.pop(context),
                     child: Text(
                       '취소',
-                      style: TextStyle(color: Color(0xFF6B7280)),
+                      style: TextStyle(color: AppColors.paginationText),
                     ),
                   ),
                   ElevatedButton(
                     onPressed: _saving ? null : _save,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF10A37F),
+                      backgroundColor: AppColors.accent,
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -1020,14 +1053,14 @@ class _Toggle extends StatelessWidget {
         style: TextStyle(
           fontSize: 13,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF374151),
+          color: AppColors.pageBtnIcon,
         ),
       ),
       Switch(
         value: value,
         onChanged: onChanged,
-        activeThumbColor: Color(0xFF10A37F),
-        activeTrackColor: Color(0xFF10A37F).withValues(alpha: 0.4),
+        activeThumbColor: AppColors.accent,
+        activeTrackColor: AppColors.accent.withValues(alpha: 0.4),
       ),
     ],
   );
@@ -1077,7 +1110,7 @@ class _LogsSectionState extends State<_LogsSection> {
   Widget _logCard(LogItem l) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: Colors.white,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(10),
     ),
     child: Row(
@@ -1085,17 +1118,17 @@ class _LogsSectionState extends State<_LogsSection> {
       children: [
         Text(
           _fmtDate(l.createdAt),
-          style: TextStyle(fontSize: 12, color: Color(0xFF9CA3AF)),
+          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
         ),
         Expanded(
           child: Text(
             '${l.adminName}  ·  ${l.action}',
-            style: TextStyle(fontSize: 14),
+            style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
           ),
         ),
         Text(
           '${l.targetType} #${l.targetId}',
-          style: TextStyle(fontSize: 12, color: Color(0xFF6B7280)),
+          style: TextStyle(fontSize: 12, color: AppColors.paginationText),
         ),
       ],
     ),
@@ -1122,13 +1155,17 @@ class _SectionScaffold extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          color: Colors.white,
+          color: AppColors.surfaceBackground,
           padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           child: Row(
             children: [
               Text(
                 title,
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                ),
               ),
               Spacer(),
               ?action,
@@ -1139,7 +1176,7 @@ class _SectionScaffold extends StatelessWidget {
           child: loading
               ? Center(
                   child: CircularProgressIndicator(
-                    color: Color(0xFF10A37F),
+                    color: AppColors.accent,
                     strokeWidth: 2,
                   ),
                 )
@@ -1161,7 +1198,7 @@ class _ActionButton extends StatelessWidget {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: Color(0xFF10A37F),
+        color: AppColors.accent,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
@@ -1197,7 +1234,7 @@ class _EmptyHint extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Center(
-    child: Text(text, style: TextStyle(fontSize: 14, color: Color(0xFF9CA3AF))),
+    child: Text(text, style: TextStyle(fontSize: 14, color: AppColors.textMuted)),
   );
 }
 
@@ -1217,7 +1254,7 @@ class _FormDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.dialogBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: 480,
@@ -1228,7 +1265,11 @@ class _FormDialog extends StatelessWidget {
           children: [
             Text(
               title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             SizedBox(height: 24),
             ...children,
@@ -1239,12 +1280,15 @@ class _FormDialog extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text('취소', style: TextStyle(color: Color(0xFF6B7280))),
+                  child: Text(
+                    '취소',
+                    style: TextStyle(color: AppColors.paginationText),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: saving ? null : onSave,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFF10A37F),
+                    backgroundColor: AppColors.accent,
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
@@ -1292,22 +1336,23 @@ class _FormField extends StatelessWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: Color(0xFF374151),
+            color: AppColors.pageBtnIcon,
           ),
         ),
         SizedBox(height: 8),
         TextField(
           controller: controller,
           maxLines: maxLines,
+          style: TextStyle(color: AppColors.textPrimary),
           decoration: InputDecoration(
             contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Color(0xFFD1D5DB)),
+              borderSide: BorderSide(color: AppColors.borderMuted),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Color(0xFF10A37F), width: 1.5),
+              borderSide: BorderSide(color: AppColors.accent, width: 1.5),
             ),
           ),
         ),
@@ -1324,17 +1369,24 @@ class _ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: Colors.white,
+      backgroundColor: AppColors.dialogBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       title: Text(
         '삭제 확인',
-        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: AppColors.textPrimary,
+        ),
       ),
-      content: Text(message, style: TextStyle(fontSize: 14)),
+      content: Text(
+        message,
+        style: TextStyle(fontSize: 14, color: AppColors.textPrimary),
+      ),
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('취소', style: TextStyle(color: Color(0xFF6B7280))),
+          child: Text('취소', style: TextStyle(color: AppColors.paginationText)),
         ),
         ElevatedButton(
           onPressed: () {
@@ -1342,7 +1394,7 @@ class _ConfirmDialog extends StatelessWidget {
             onConfirm();
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Color(0xFFEF4444),
+            backgroundColor: AppColors.deleteButton,
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
