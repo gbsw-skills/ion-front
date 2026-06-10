@@ -88,6 +88,12 @@ class AppColors {
   static Color get themeTogglePillThumb =>
       Store.isLightMode.value ? Colors.white : Color(0xff64666D);
 
+  static Color get themeToggleTrack =>
+      Store.isLightMode.value ? Color(0xffE2E2E2) : Color(0xff2D2E31);
+
+  static Color get themeToggleThumb =>
+      Store.isLightMode.value ? Colors.white : Color(0xff64666D);
+
   static Color get historyItemSelectedBackground =>
       Store.isLightMode.value ? Color(0xFFE3FEF7) : Color(0xFF1E1F22);
 

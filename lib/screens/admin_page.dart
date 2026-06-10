@@ -146,7 +146,7 @@ class _AdminPageState extends State<AdminPage> {
         Spacer(),
         Divider(color: AppColors.cardDivider, thickness: 1),
         SizedBox(height: 14),
-        Center(child: ThemeTogglePill()),
+        Center(child: ThemeToggleSwitch()),
       ],
     ),
   );
