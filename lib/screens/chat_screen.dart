@@ -16,7 +16,7 @@ import '../store.dart';
 import '../theme/app_colors.dart';
 
 class ChatScreen extends StatefulWidget {
-  ChatScreen({super.key});
+  const ChatScreen({super.key});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -33,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
+    Store.isLightMode.addListener(_rebuild);
     Store.selectedSessionId.addListener(_onSessionChanged);
     Store.isLightMode.addListener(_rebuild);
     _chatController.addListener(_onInputChanged);

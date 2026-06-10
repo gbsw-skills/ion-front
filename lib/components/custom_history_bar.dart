@@ -18,7 +18,7 @@ class CustomHistoryBar extends StatefulWidget {
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
   final _listKey = GlobalKey<HistoryChatListState>();
-  String selectedChatId = '';
+  String selectedChatId = Store.selectedSessionId.value;
   HistoryTap selectTap = HistoryTap.chats;
   int _chatsCount = 0;
   int _savedCount = 0;
@@ -27,15 +27,21 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
   void initState() {
     super.initState();
     Store.isLightMode.addListener(_rebuild);
+    Store.selectedSessionId.addListener(_onSessionIdChanged);
   }
 
   @override
   void dispose() {
     Store.isLightMode.removeListener(_rebuild);
+    Store.selectedSessionId.removeListener(_onSessionIdChanged);
     super.dispose();
   }
 
   void _rebuild() => setState(() {});
+
+  void _onSessionIdChanged() {
+    setState(() => selectedChatId = Store.selectedSessionId.value);
+  }
 
   void changeTap(HistoryTap tap) {
     setState(() {
