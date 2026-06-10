@@ -96,8 +96,6 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ),
         SizedBox(width: 16),
-        ThemeTogglePill(),
-        SizedBox(width: 16),
         Container(width: 1, height: 18, color: AppColors.cardDivider),
         SizedBox(width: 16),
         TextButton(
@@ -145,6 +143,10 @@ class _AdminPageState extends State<AdminPage> {
         _navItem('LLM 엔드포인트', Icons.memory_outlined, _AdminSection.llm),
         SizedBox(height: 4),
         _navItem('감사 로그', Icons.history, _AdminSection.logs),
+        Spacer(),
+        Divider(color: AppColors.cardDivider, thickness: 1),
+        SizedBox(height: 14),
+        Center(child: ThemeTogglePill()),
       ],
     ),
   );
