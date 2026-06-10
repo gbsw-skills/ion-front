@@ -25,8 +25,8 @@ class ThemeToggleSwitch extends StatelessWidget {
             duration: Duration(milliseconds: 300),
             curve: Curves.easeInOut,
             alignment: Store.isLightMode.value
-                ? Alignment.centerRight
-                : Alignment.centerLeft,
+                ? Alignment.centerLeft
+                : Alignment.centerRight,
             child: AnimatedContainer(
               duration: Duration(milliseconds: 300),
               width: 24,
@@ -37,28 +37,9 @@ class ThemeToggleSwitch extends StatelessWidget {
               ),
             ),
           ),
-          // 다크 모드 아이콘 (고정 좌측)
+          // 라이트 모드 아이콘 (고정 좌측)
           Align(
             alignment: Alignment.centerLeft,
-            child: GestureDetector(
-              onTap: () => Store.isLightMode.value = false,
-              behavior: HitTestBehavior.opaque,
-              child: SizedBox(
-                width: 24,
-                height: double.infinity,
-                child: Center(
-                  child: SvgPicture.asset(
-                    'assets/icons/${Store.isLightMode.value ? '' : 'dark_'}dark.svg',
-                    width: 12,
-                    height: 12,
-                  ),
-                ),
-              ),
-            ),
-          ),
-          // 라이트 모드 아이콘 (고정 우측)
-          Align(
-            alignment: Alignment.centerRight,
             child: GestureDetector(
               onTap: () => Store.isLightMode.value = true,
               behavior: HitTestBehavior.opaque,
@@ -68,6 +49,25 @@ class ThemeToggleSwitch extends StatelessWidget {
                 child: Center(
                   child: SvgPicture.asset(
                     'assets/icons/${Store.isLightMode.value ? '' : 'dark_'}light.svg',
+                    width: 12,
+                    height: 12,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // 다크 모드 아이콘 (고정 우측)
+          Align(
+            alignment: Alignment.centerRight,
+            child: GestureDetector(
+              onTap: () => Store.isLightMode.value = false,
+              behavior: HitTestBehavior.opaque,
+              child: SizedBox(
+                width: 24,
+                height: double.infinity,
+                child: Center(
+                  child: SvgPicture.asset(
+                    'assets/icons/${Store.isLightMode.value ? '' : 'dark_'}dark.svg',
                     width: 12,
                     height: 12,
                   ),
