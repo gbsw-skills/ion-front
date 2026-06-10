@@ -4,11 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ion/enums/history_tap.dart';
 
-import '../../store.dart';
+import '../../theme/app_colors.dart';
 import '../../utils.dart';
 
 class HistoryTapBar extends StatefulWidget {
-  const HistoryTapBar({
+  HistoryTapBar({
     super.key,
     required this.selectTap,
     required this.changeTap,
@@ -26,7 +26,6 @@ class HistoryTapBar extends StatefulWidget {
 }
 
 class _HistoryTapBarState extends State<HistoryTapBar> {
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -35,12 +34,8 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
       height: 55,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Store.isLightMode.value
-            ? Color(0xFFE2E2E2)
-            : Color(0xFF3F424A)),
-        color: Store.isLightMode.value
-            ? Color(0xffEEEEEE)
-            : Color(0xFF3F424A),
+        border: Border.all(color: AppColors.themeTogglePillBackground),
+        color: AppColors.tabBarBackground,
       ),
       child: Stack(
         children: [
@@ -68,21 +63,17 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
                           child: Container(
                             margin: EdgeInsetsGeometry.symmetric(horizontal: 2),
                             decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: Color(0xff1E1F22),
-                                gradient: LinearGradient(
-                                  stops: [0.32, 1],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Store.isLightMode.value
-                                        ? Color(0xFF878787)
-                                        : Color(0xff1E1F22),
-                                    Store.isLightMode.value
-                                        ? Color(0xFFE8E8E8)
-                                        : Color(0xff1E1F22),
-                                  ],
-                                )
+                              borderRadius: BorderRadius.circular(8),
+                              color: Color(0xff1E1F22),
+                              gradient: LinearGradient(
+                                stops: [0.32, 1],
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  AppColors.tabIndicatorGradientStart,
+                                  AppColors.tabIndicatorGradientEnd,
+                                ],
+                              ),
                             ),
                           ),
                         ),
@@ -91,7 +82,7 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
                     Container(
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(8),
-                        color: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
+                        color: AppColors.tabIndicatorBackground,
                       ),
                     ),
                   ],
@@ -101,8 +92,16 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
           ),
           Row(
             children: [
-              historyTabItem('chat_filled', HistoryTap.chats, widget.chatsCount),
-              historyTabItem('flag_filled', HistoryTap.saved, widget.savedCount),
+              historyTabItem(
+                'chat_filled',
+                HistoryTap.chats,
+                widget.chatsCount,
+              ),
+              historyTabItem(
+                'flag_filled',
+                HistoryTap.saved,
+                widget.savedCount,
+              ),
             ],
           ),
         ],
@@ -112,12 +111,8 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
 
   Widget historyTabItem(String icon, HistoryTap tap, int value) {
     bool isSelected = widget.selectTap == tap;
-    Color unselectedColor = Store.isLightMode.value
-        ? Color(0xFF3B3B3B)
-        : Color(0xFFEEEEEE);
-    Color color = isSelected
-        ? Color(0xFF14B48D)
-        : unselectedColor;
+    Color unselectedColor = AppColors.tabUnselectedText;
+    Color color = isSelected ? Color(0xFF14B48D) : unselectedColor;
 
     return Expanded(
       child: GestureDetector(
@@ -137,17 +132,23 @@ class _HistoryTapBarState extends State<HistoryTapBar> {
                   colorFilter: ColorFilter.mode(color, BlendMode.srcIn),
                 ),
               ),
-              Text(tap.label, style: TextStyle(
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w600,
-              ),),
+              Text(
+                tap.label,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: color,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
               IntrinsicHeight(
                 child: Container(
-                  padding: EdgeInsetsGeometry.symmetric(horizontal: 6, vertical: 1),
+                  padding: EdgeInsetsGeometry.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(5),
-                      color: color.withValues(alpha: 0.11)
+                    borderRadius: BorderRadius.circular(5),
+                    color: color.withValues(alpha: 0.11),
                   ),
                   child: Text(
                     value.toString(),

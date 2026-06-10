@@ -5,10 +5,11 @@ import 'package:ion/models/history_chat_model.dart';
 import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/models/chat_session_model.dart';
 import 'package:ion/store.dart';
+import 'package:ion/theme/app_colors.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HistoryChatList extends StatefulWidget {
-  const HistoryChatList({
+  HistoryChatList({
     super.key,
     required this.selectedChatId,
     required this.changeChat,
@@ -33,7 +34,8 @@ class HistoryChatListState extends State<HistoryChatList> {
   String? _hoveredId;
   String? _popupOpenId; // 팝업이 열린 아이템 ID — 팝업 중 버튼이 트리에서 제거되는 것 방지
 
-  List<HistoryChatModel> get _displayedChats => widget.selectTap == HistoryTap.saved
+  List<HistoryChatModel> get _displayedChats =>
+      widget.selectTap == HistoryTap.saved
       ? _allChats.where((c) => c.isSaved).toList()
       : _allChats;
 
@@ -41,6 +43,13 @@ class HistoryChatListState extends State<HistoryChatList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSessions());
+    Store.chatListRefresh.addListener(_loadSessions);
+  }
+
+  @override
+  void dispose() {
+    Store.chatListRefresh.removeListener(_loadSessions);
+    super.dispose();
   }
 
   Future<void> reload() => _loadSessions();
@@ -58,7 +67,7 @@ class HistoryChatListState extends State<HistoryChatList> {
     );
   }
 
-  static const _savedKey = 'savedSessionIds';
+  static final _savedKey = 'savedSessionIds';
 
   Future<List<String>> _getSavedIds() async {
     final prefs = await SharedPreferences.getInstance();
@@ -89,6 +98,15 @@ class HistoryChatListState extends State<HistoryChatList> {
         _isLoading = false;
       });
       _notifyCounts();
+
+      // 현재 보고 있는 채팅방의 제목이 바뀌었다면 헤더 제목도 갱신
+      final selectedId = Store.selectedSessionId.value;
+      if (selectedId.isNotEmpty) {
+        final selected = _allChats.where((c) => c.id == selectedId);
+        if (selected.isNotEmpty) {
+          Store.selectedSessionTitle.value = selected.first.title;
+        }
+      }
     } catch (_) {
       setState(() {
         _isLoading = false;
@@ -139,7 +157,7 @@ class HistoryChatListState extends State<HistoryChatList> {
       if (idx != -1) setState(() => _allChats.insert(idx, chat));
       _notifyCounts();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.')),
+        SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.')),
       );
       return;
     }
@@ -152,9 +170,12 @@ class HistoryChatListState extends State<HistoryChatList> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Expanded(
+      return Expanded(
         child: Center(
-          child: CircularProgressIndicator(color: Color(0xFF10A37F), strokeWidth: 2),
+          child: CircularProgressIndicator(
+            color: Color(0xFF10A37F),
+            strokeWidth: 2,
+          ),
         ),
       );
     }
@@ -165,19 +186,20 @@ class HistoryChatListState extends State<HistoryChatList> {
             mainAxisSize: MainAxisSize.min,
             spacing: 12,
             children: [
-              Text('목록을 불러오지 못했습니다.',
-                  style: TextStyle(
-                      fontSize: 13,
-                      color: Store.isLightMode.value
-                          ? const Color(0xFF9F9F9F)
-                          : const Color(0xFFABABAB))),
+              Text(
+                '목록을 불러오지 못했습니다.',
+                style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+              ),
               GestureDetector(
                 onTap: _loadSessions,
-                child: const Text('다시 시도',
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF10A37F),
-                        fontWeight: FontWeight.w600)),
+                child: Text(
+                  '다시 시도',
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: Color(0xFF10A37F),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -188,22 +210,20 @@ class HistoryChatListState extends State<HistoryChatList> {
       return Expanded(
         child: Center(
           child: Text(
-            widget.selectTap == HistoryTap.saved ? '저장된 대화가 없습니다.' : '대화 기록이 없습니다.',
-            style: TextStyle(
-                fontSize: 13,
-                color: Store.isLightMode.value
-                    ? const Color(0xFF9F9F9F)
-                    : const Color(0xFFABABAB)),
+            widget.selectTap == HistoryTap.saved
+                ? '저장된 대화가 없습니다.'
+                : '대화 기록이 없습니다.',
+            style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ),
       );
     }
     return Expanded(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6),
+        padding: EdgeInsets.symmetric(horizontal: 6),
         child: ListView.separated(
           itemCount: _displayedChats.length,
-          separatorBuilder: (_, i) => const SizedBox(height: 10),
+          separatorBuilder: (_, i) => SizedBox(height: 10),
           itemBuilder: (_, index) => _chatItem(_displayedChats[index]),
         ),
       ),
@@ -214,15 +234,9 @@ class HistoryChatListState extends State<HistoryChatList> {
     final isSelected = widget.selectedChatId == chat.id;
     final isHovered = _hoveredId == chat.id || _popupOpenId == chat.id;
 
-    final selectedBg = Store.isLightMode.value
-        ? const Color(0xFFE3FEF7)
-        : const Color(0xFF1E1F22);
-    final titleColor = Store.isLightMode.value
-        ? const Color(0xFF1E1F22)
-        : const Color(0xFFEEEEEE);
-    final dateColor = Store.isLightMode.value
-        ? const Color(0xFF9F9F9F)
-        : const Color(0x99ABABAB);
+    final selectedBg = AppColors.historyItemSelectedBackground;
+    final titleColor = AppColors.textPrimary;
+    final dateColor = AppColors.historyItemDateColor;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hoveredId = chat.id),
@@ -235,7 +249,7 @@ class HistoryChatListState extends State<HistoryChatList> {
           widget.changeChat(chat.id);
         },
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: EdgeInsets.symmetric(vertical: 10),
           width: double.infinity,
           height: 68,
           decoration: BoxDecoration(
@@ -246,7 +260,7 @@ class HistoryChatListState extends State<HistoryChatList> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10),
+                padding: EdgeInsets.symmetric(horizontal: 10),
                 child: SizedBox(
                   width: 15,
                   height: 15,
@@ -268,26 +282,30 @@ class HistoryChatListState extends State<HistoryChatList> {
                           child: Text(
                             chat.title,
                             style: TextStyle(
-                                fontSize: 15,
-                                color: titleColor,
-                                fontWeight: FontWeight.w600),
+                              fontSize: 15,
+                              color: titleColor,
+                              fontWeight: FontWeight.w600,
+                            ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (isHovered)
                           _moreButton(chat, titleColor)
                         else
-                          Text(chat.displayTime,
-                              style: TextStyle(
-                                  fontSize: 12,
-                                  color: dateColor,
-                                  fontWeight: FontWeight.w400)),
+                          Text(
+                            chat.displayTime,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: dateColor,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
                       ],
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 16),
+              SizedBox(width: 16),
             ],
           ),
         ),
@@ -301,7 +319,7 @@ class HistoryChatListState extends State<HistoryChatList> {
       icon: Icon(Icons.more_horiz, size: 18, color: iconColor),
       iconSize: 18,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      color: Store.isLightMode.value ? Colors.white : const Color(0xFF3F424A),
+      color: AppColors.dialogBackground,
       elevation: 4,
       onOpened: () => setState(() => _popupOpenId = chat.id),
       onCanceled: () => setState(() => _popupOpenId = null),
@@ -311,18 +329,16 @@ class HistoryChatListState extends State<HistoryChatList> {
           height: 36,
           child: Text(
             chat.isSaved ? '저장 해제' : '저장',
-            style: TextStyle(
-                fontSize: 13,
-                color: Store.isLightMode.value
-                    ? const Color(0xFF1E1F22)
-                    : const Color(0xFFEEEEEE)),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
           ),
         ),
         PopupMenuItem(
           value: 'delete',
           height: 36,
-          child: const Text('삭제',
-              style: TextStyle(fontSize: 13, color: Color(0xFFE53935))),
+          child: Text(
+            '삭제',
+            style: TextStyle(fontSize: 13, color: Color(0xFFE53935)),
+          ),
         ),
       ],
       onSelected: (value) {

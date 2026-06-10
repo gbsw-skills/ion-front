@@ -3,9 +3,10 @@ import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/admin_page.dart';
 import 'package:ion/screens/home_page.dart';
 import 'package:ion/store.dart';
+import 'package:ion/theme/app_colors.dart';
 
 class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+  LoginScreen({super.key});
 
   @override
   State<LoginScreen> createState() => _LoginScreenState();
@@ -46,7 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (result == 'success') {
-      final dest = Store.userRole == 'ADMIN' ? const AdminPage() : const HomePage();
+      final dest = Store.userRole == 'ADMIN' ? AdminPage() : HomePage();
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => dest),
       );
@@ -65,19 +66,19 @@ class _LoginScreenState extends State<LoginScreen> {
     final isLight = Store.isLightMode.value;
 
     return Scaffold(
-      backgroundColor: isLight ? const Color(0xffF5F5F5) : const Color(0xff282A2E),
+      backgroundColor: AppColors.loginPageBackground,
       body: Center(
         child: Container(
           width: 400,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 48),
+          padding: EdgeInsets.symmetric(horizontal: 40, vertical: 48),
           decoration: BoxDecoration(
-            color: isLight ? Colors.white : const Color(0xff3F424A),
+            color: AppColors.dialogBackground,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: const Color(0x1A000000),
+                color: Color(0x1A000000),
                 blurRadius: 40,
-                offset: const Offset(0, 8),
+                offset: Offset(0, 8),
               ),
             ],
           ),
@@ -90,35 +91,39 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF10A37F),
+                    color: Color(0xFF10A37F),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.chat_bubble_outline, color: Colors.white, size: 24),
+                  child: Icon(
+                    Icons.chat_bubble_outline,
+                    color: Colors.white,
+                    size: 24,
+                  ),
                 ),
               ),
-              const SizedBox(height: 24),
+              SizedBox(height: 24),
               Center(
                 child: Text(
                   'ION',
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: isLight ? const Color(0xFF1E1F22) : const Color(0xFFEEEEEE),
+                    color: AppColors.textPrimary,
                   ),
                 ),
               ),
-              const SizedBox(height: 32),
+              SizedBox(height: 32),
               _fieldLabel('아이디', isLight),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _textField(
                 controller: _usernameController,
                 isLight: isLight,
                 hint: '아이디를 입력해주세요.',
                 onSubmitted: (_) => _login(),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 20),
               _fieldLabel('비밀번호', isLight),
-              const SizedBox(height: 8),
+              SizedBox(height: 8),
               _textField(
                 controller: _passwordController,
                 hint: '비밀번호를 입력해주세요.',
@@ -126,37 +131,45 @@ class _LoginScreenState extends State<LoginScreen> {
                 obscure: _obscurePassword,
                 onSubmitted: (_) => _login(),
                 suffix: IconButton(
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                   icon: Icon(
-                    _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscurePassword
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 18,
-                    color: const Color(0xffA0A7BB),
+                    color: Color(0xffA0A7BB),
                   ),
                 ),
               ),
               if (_errorMessage != null) ...[
-                const SizedBox(height: 16),
+                SizedBox(height: 16),
                 Text(
                   _errorMessage!,
-                  style: const TextStyle(color: Color(0xFFE53935), fontSize: 13),
+                  style: TextStyle(
+                    color: Color(0xFFE53935),
+                    fontSize: 13,
+                  ),
                 ),
               ],
-              const SizedBox(height: 28),
+              SizedBox(height: 28),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF10A37F),
-                    disabledBackgroundColor: const Color(0xFF10A37F).withValues(alpha: 0.5),
+                    backgroundColor: Color(0xFF10A37F),
+                    disabledBackgroundColor: Color(
+                      0xFF10A37F,
+                    ).withValues(alpha: 0.5),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                     elevation: 0,
                   ),
                   child: _isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
@@ -164,7 +177,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
+                      : Text(
                           '로그인',
                           style: TextStyle(
                             color: Colors.white,
@@ -182,13 +195,13 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _fieldLabel(String label, bool isLight) => Text(
-        label,
-        style: TextStyle(
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          color: isLight ? const Color(0xFF1E1F22) : const Color(0xFFEEEEEE),
-        ),
-      );
+    label,
+    style: TextStyle(
+      fontSize: 13,
+      fontWeight: FontWeight.w600,
+      color: AppColors.textPrimary,
+    ),
+  );
 
   Widget _textField({
     required TextEditingController controller,
@@ -197,31 +210,30 @@ class _LoginScreenState extends State<LoginScreen> {
     bool obscure = false,
     Widget? suffix,
     void Function(String)? onSubmitted,
-  }) =>
-      TextField(
-        controller: controller,
-        obscureText: obscure,
-        onSubmitted: onSubmitted,
-        onTapOutside: (_) => FocusScope.of(context).unfocus(),
-        style: TextStyle(
-          fontSize: 14,
-          color: isLight ? const Color(0xFF1E1F22) : const Color(0xFFEEEEEE),
-        ),
-        decoration: InputDecoration(
-          hintText: hint,
-          hintStyle: const TextStyle(color: Color(0xffA0A7BB)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-          suffixIcon: suffix,
-          filled: true,
-          fillColor: isLight ? const Color(0xffF5F5F5) : const Color(0xff4B4F5B),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: BorderSide.none,
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(10),
-            borderSide: const BorderSide(color: Color(0xFF10A37F), width: 1.5),
-          ),
-        ),
-      );
+  }) => TextField(
+    controller: controller,
+    obscureText: obscure,
+    onSubmitted: onSubmitted,
+    onTapOutside: (_) => FocusScope.of(context).unfocus(),
+    style: TextStyle(
+      fontSize: 14,
+      color: AppColors.textPrimary,
+    ),
+    decoration: InputDecoration(
+      hintText: hint,
+      hintStyle: TextStyle(color: Color(0xffA0A7BB)),
+      contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      suffixIcon: suffix,
+      filled: true,
+      fillColor: AppColors.inputFieldBackground,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(10),
+        borderSide: BorderSide(color: Color(0xFF10A37F), width: 1.5),
+      ),
+    ),
+  );
 }
