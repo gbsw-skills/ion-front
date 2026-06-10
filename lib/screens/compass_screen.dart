@@ -3,6 +3,9 @@ import 'package:ion/models/chat_session_model.dart';
 import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/store.dart';
 import 'package:ion/theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+enum _SortOption { recent, title }
 
 class CompassScreen extends StatefulWidget {
   CompassScreen({super.key});
@@ -13,9 +16,16 @@ class CompassScreen extends StatefulWidget {
 
 class _CompassScreenState extends State<CompassScreen> {
   final _repo = ChatRepository();
+  final _searchController = TextEditingController();
   List<ChatSession> _sessions = [];
+  List<String> _savedIds = [];
   bool _loading = true;
   bool _hasError = false;
+  String _searchQuery = '';
+  _SortOption _sortOption = _SortOption.recent;
+  bool _showSavedOnly = false;
+
+  static final _savedKey = 'savedSessionIds';
 
   @override
   void initState() {
@@ -27,6 +37,7 @@ class _CompassScreenState extends State<CompassScreen> {
   @override
   void dispose() {
     Store.isLightMode.removeListener(_rebuild);
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -38,10 +49,16 @@ class _CompassScreenState extends State<CompassScreen> {
       _hasError = false;
     });
     try {
-      final sessions = await _repo.getSessions(size: 50);
+      final results = await Future.wait([
+        _repo.getSessions(size: 50),
+        _getSavedIds(),
+      ]);
+      final sessions = results[0] as List<ChatSession>;
+      final savedIds = results[1] as List<String>;
       if (mounted) {
         setState(() {
           _sessions = sessions;
+          _savedIds = savedIds;
           _loading = false;
         });
       }
@@ -55,10 +72,71 @@ class _CompassScreenState extends State<CompassScreen> {
     }
   }
 
+  Future<List<String>> _getSavedIds() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getStringList(_savedKey) ?? [];
+  }
+
   void _openSession(ChatSession session) {
     Store.selectedSessionId.value = session.sessionId;
     Store.selectedSessionTitle.value = session.title;
     Store.currentIndex.value = 0;
+  }
+
+  List<ChatSession> get _filteredSessions {
+    final query = _searchQuery.trim().toLowerCase();
+    final list = _sessions.where((s) {
+      if (_showSavedOnly && !_savedIds.contains(s.sessionId)) return false;
+      if (query.isNotEmpty && !s.title.toLowerCase().contains(query)) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (_sortOption == _SortOption.title) {
+      list.sort((a, b) => a.title.compareTo(b.title));
+    } else {
+      list.sort((a, b) => b.lastActiveAt.compareTo(a.lastActiveAt));
+    }
+    return list;
+  }
+
+  Map<String, List<ChatSession>> _groupByDate(List<ChatSession> sessions) {
+    final today = <ChatSession>[];
+    final yesterday = <ChatSession>[];
+    final lastWeek = <ChatSession>[];
+    final older = <ChatSession>[];
+
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+
+    for (final s in sessions) {
+      DateTime dt;
+      try {
+        dt = DateTime.parse(s.lastActiveAt).toLocal();
+      } catch (_) {
+        older.add(s);
+        continue;
+      }
+      final date = DateTime(dt.year, dt.month, dt.day);
+      final diffDays = todayDate.difference(date).inDays;
+      if (diffDays <= 0) {
+        today.add(s);
+      } else if (diffDays == 1) {
+        yesterday.add(s);
+      } else if (diffDays <= 7) {
+        lastWeek.add(s);
+      } else {
+        older.add(s);
+      }
+    }
+
+    final result = <String, List<ChatSession>>{};
+    if (today.isNotEmpty) result['오늘'] = today;
+    if (yesterday.isNotEmpty) result['어제'] = yesterday;
+    if (lastWeek.isNotEmpty) result['지난 7일'] = lastWeek;
+    if (older.isNotEmpty) result['이전'] = older;
+    return result;
   }
 
   @override
@@ -81,6 +159,11 @@ class _CompassScreenState extends State<CompassScreen> {
             ),
           ),
           SizedBox(height: 14),
+          Padding(
+            padding: EdgeInsets.fromLTRB(27, 0, 18, 0),
+            child: _filterBar(),
+          ),
+          SizedBox(height: 14),
           Expanded(
             child: Container(
               margin: EdgeInsets.only(right: 18, bottom: 18),
@@ -96,6 +179,92 @@ class _CompassScreenState extends State<CompassScreen> {
       ),
     );
   }
+
+  Widget _filterBar() => Row(
+    children: [
+      Expanded(child: _searchField()),
+      SizedBox(width: 12),
+      _segmentedControl<_SortOption>(
+        options: {'최근순': _SortOption.recent, '제목순': _SortOption.title},
+        current: _sortOption,
+        onSelect: (v) => setState(() => _sortOption = v),
+      ),
+      SizedBox(width: 12),
+      _segmentedControl<bool>(
+        options: {'전체': false, '저장됨': true},
+        current: _showSavedOnly,
+        onSelect: (v) => setState(() => _showSavedOnly = v),
+      ),
+    ],
+  );
+
+  Widget _searchField() => Container(
+    height: 38,
+    padding: EdgeInsets.symmetric(horizontal: 12),
+    decoration: BoxDecoration(
+      color: AppColors.searchBarBackground.withValues(alpha: 0.25),
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      children: [
+        Icon(Icons.search, size: 16, color: AppColors.textMuted),
+        SizedBox(width: 8),
+        Expanded(
+          child: TextField(
+            controller: _searchController,
+            onChanged: (v) => setState(() => _searchQuery = v),
+            style: TextStyle(fontSize: 13, color: AppColors.textPrimary),
+            decoration: InputDecoration(
+              isCollapsed: true,
+              hintText: '제목으로 검색...',
+              hintStyle: TextStyle(color: AppColors.textMuted),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+
+  Widget _segmentedControl<T>({
+    required Map<String, T> options,
+    required T current,
+    required void Function(T) onSelect,
+  }) => Container(
+    height: 38,
+    padding: EdgeInsets.all(3),
+    decoration: BoxDecoration(
+      color: AppColors.themeTogglePillBackground,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: options.entries.map((e) {
+        final selected = e.value == current;
+        return GestureDetector(
+          onTap: () => onSelect(e.value),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 12),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.themeTogglePillThumb
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              e.key,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                color: selected ? AppColors.textPrimary : AppColors.textMuted,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    ),
+  );
 
   Widget _body(bool isLight) {
     if (_loading) {
@@ -130,16 +299,94 @@ class _CompassScreenState extends State<CompassScreen> {
     }
 
     if (_sessions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: 16,
-          children: [
-            Icon(Icons.chat_bubble_outline, size: 48, color: AppColors.divider),
-            Text(
-              '아직 대화 기록이 없습니다.',
-              style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+      return _emptyState('아직 대화 기록이 없습니다.', showStartButton: true);
+    }
+
+    final filtered = _filteredSessions;
+    if (filtered.isEmpty) {
+      return _emptyState('검색 결과가 없습니다.', showStartButton: false);
+    }
+
+    final groups = _groupByDate(filtered);
+    final slivers = <Widget>[
+      SliverPadding(
+        padding: EdgeInsets.fromLTRB(20, 20, 20, 0),
+        sliver: SliverToBoxAdapter(
+          child: Row(
+            children: [
+              Text(
+                '최근 대화 ${filtered.length}개',
+                style: TextStyle(fontSize: 13, color: AppColors.textMuted),
+              ),
+              Spacer(),
+              GestureDetector(
+                onTap: _load,
+                child: Icon(
+                  Icons.refresh,
+                  size: 18,
+                  color: Color(0xFF10A37F),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ];
+
+    groups.forEach((label, items) {
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(20, 20, 20, 8),
+          sliver: SliverToBoxAdapter(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: AppColors.textSecondary,
+              ),
             ),
+          ),
+        ),
+      );
+      slivers.add(
+        SliverPadding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 0),
+          sliver: SliverGrid(
+            delegate: SliverChildBuilderDelegate(
+              (_, i) => _sessionCard(items[i], isLight),
+              childCount: items.length,
+            ),
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+              maxCrossAxisExtent: 280,
+              mainAxisExtent: 110,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+            ),
+          ),
+        ),
+      );
+    });
+
+    slivers.add(
+      SliverPadding(padding: EdgeInsets.only(bottom: 20)),
+    );
+
+    return CustomScrollView(slivers: slivers);
+  }
+
+  Widget _emptyState(String message, {required bool showStartButton}) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        spacing: 16,
+        children: [
+          Icon(Icons.chat_bubble_outline, size: 48, color: AppColors.divider),
+          Text(
+            message,
+            style: TextStyle(fontSize: 15, color: AppColors.textSecondary),
+          ),
+          if (showStartButton)
             GestureDetector(
               onTap: () => Store.currentIndex.value = 0,
               child: Container(
@@ -161,56 +408,14 @@ class _CompassScreenState extends State<CompassScreen> {
                 ),
               ),
             ),
-          ],
-        ),
-      );
-    }
-
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: EdgeInsets.all(20),
-          sliver: SliverToBoxAdapter(
-            child: Row(
-              children: [
-                Text(
-                  '최근 대화 ${_sessions.length}개',
-                  style: TextStyle(fontSize: 13, color: AppColors.textMuted),
-                ),
-                Spacer(),
-                GestureDetector(
-                  onTap: _load,
-                  child: Icon(
-                    Icons.refresh,
-                    size: 18,
-                    color: Color(0xFF10A37F),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, 0, 20, 20),
-          sliver: SliverGrid(
-            delegate: SliverChildBuilderDelegate(
-              (_, i) => _sessionCard(_sessions[i], isLight),
-              childCount: _sessions.length,
-            ),
-            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 280,
-              mainAxisExtent: 110,
-              crossAxisSpacing: 12,
-              mainAxisSpacing: 12,
-            ),
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _sessionCard(ChatSession session, bool isLight) {
     final isSelected = Store.selectedSessionId.value == session.sessionId;
+    final isSaved = _savedIds.contains(session.sessionId);
 
     return GestureDetector(
       onTap: () => _openSession(session),
@@ -245,6 +450,15 @@ class _CompassScreenState extends State<CompassScreen> {
                   ),
                 ),
                 Spacer(),
+                if (isSaved)
+                  Padding(
+                    padding: EdgeInsets.only(right: 6),
+                    child: Icon(
+                      Icons.bookmark,
+                      size: 14,
+                      color: Color(0xFF10A37F),
+                    ),
+                  ),
                 Text(
                   _timeAgo(session.lastActiveAt),
                   style: TextStyle(
