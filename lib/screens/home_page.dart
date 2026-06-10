@@ -6,16 +6,17 @@ import 'package:ion/screens/compass_screen.dart';
 import 'package:ion/screens/filter_screen.dart';
 import 'package:ion/screens/settings_screen.dart';
 import 'package:ion/store.dart';
+import 'package:ion/theme/app_colors.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  HomePage({super.key});
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  static const _breakpoint = 750.0;
+  static final _breakpoint = 750.0;
 
   @override
   void initState() {
@@ -38,16 +39,14 @@ class _HomePageState extends State<HomePage> {
     final index = Store.currentIndex.value;
 
     return Scaffold(
-      backgroundColor: Store.isLightMode.value
-          ? const Color(0xffFFFFFF)
-          : const Color(0xff282A2E),
+      backgroundColor: AppColors.pageBackground,
       body: LayoutBuilder(
         builder: (context, constraints) {
           final showSidebars = constraints.maxWidth >= _breakpoint;
           return Row(
             children: [
-              if (showSidebars) const CustomSideBar(),
-              if (showSidebars && index == 0) const CustomHistoryBar(),
+              if (showSidebars) CustomSideBar(),
+              if (showSidebars && index == 0) CustomHistoryBar(),
               _contentFor(index),
             ],
           );
@@ -59,15 +58,15 @@ class _HomePageState extends State<HomePage> {
   Widget _contentFor(int index) {
     switch (index) {
       case 0:
-        return const ChatScreen();
+        return ChatScreen();
       case 1:
-        return const FilterScreen();
+        return FilterScreen();
       case 2:
-        return const CompassScreen();
+        return CompassScreen();
       case 3:
-        return const SettingsScreen();
+        return SettingsScreen();
       default:
-        return const ChatScreen();
+        return ChatScreen();
     }
   }
 }

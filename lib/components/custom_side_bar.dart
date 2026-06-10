@@ -4,10 +4,11 @@ import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/login_screen.dart';
 
 import '../store.dart';
+import '../theme/app_colors.dart';
 import '../utils.dart';
 
 class CustomSideBar extends StatefulWidget {
-  const CustomSideBar({super.key});
+  CustomSideBar({super.key});
 
   @override
   State<CustomSideBar> createState() => _CustomSideBarState();
@@ -32,7 +33,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
     await AuthRepository().logout();
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      MaterialPageRoute(builder: (_) => LoginScreen()),
       (_) => false,
     );
   }
@@ -43,8 +44,8 @@ class _CustomSideBarState extends State<CustomSideBar> {
       width: 90,
       height: sizeh(context),
       decoration: BoxDecoration(
-        color: Store.isLightMode.value ? Color(0xffFFFFFF) : Color(0xff1E1F22),
-        border: Border(right: BorderSide(color: Store.isLightMode.value ? Color(0xffEAEAEA) : Color(0xff2D2E30))),
+        color: AppColors.sidebarBackground,
+        border: Border(right: BorderSide(color: AppColors.sidebarBorder)),
       ),
       child: Column(
         crossAxisAlignment: .center,
@@ -65,14 +66,20 @@ class _CustomSideBarState extends State<CustomSideBar> {
               height: 38,
               padding: .all(8),
               decoration: BoxDecoration(
-                color: Store.isLightMode.value ? Color(0xffF9F9F9) : Color(0xff2D2E31),
+                color: AppColors.sidebarButtonBackground,
                 borderRadius: .circular(10),
               ),
               child: SvgPicture.asset('assets/icons/exit.svg'),
             ),
           ),
           SizedBox(height: 14),
-          Divider(color: Store.isLightMode.value ? Color(0xffEAEAEA) : Color(0xff2D2E30), indent: 22, endIndent: 22, radius: .circular(100), thickness: 2),
+          Divider(
+            color: AppColors.sidebarBorder,
+            indent: 22,
+            endIndent: 22,
+            radius: .circular(100),
+            thickness: 2,
+          ),
           SizedBox(height: 14),
           AnimatedContainer(
             duration: Duration(milliseconds: 300),
@@ -80,7 +87,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
             height: 60,
             padding: .symmetric(vertical: 6, horizontal: 6),
             decoration: BoxDecoration(
-              color: Store.isLightMode.value ? Color(0xffE2E2E2) : Color(0xff3F424A),
+              color: AppColors.themeTogglePillBackground,
               borderRadius: .circular(13),
             ),
             child: Stack(
@@ -97,9 +104,7 @@ class _CustomSideBarState extends State<CustomSideBar> {
                     width: double.infinity,
                     height: 24,
                     decoration: BoxDecoration(
-                      color: Store.isLightMode.value
-                          ? Colors.white
-                          : Color(0xff64666D),
+                      color: AppColors.themeTogglePillThumb,
                       borderRadius: .circular(8),
                     ),
                   ),
@@ -161,10 +166,14 @@ class _CustomSideBarState extends State<CustomSideBar> {
         height: 38,
         padding: .all(10),
         decoration: BoxDecoration(
-          color: isSelected ? Color(0xff10A37F) : Store.isLightMode.value ? Color(0xffF9F9F9) : Color(0xff2D2E31),
+          color: isSelected
+              ? Color(0xff10A37F)
+              : AppColors.sidebarButtonBackground,
           borderRadius: .circular(10),
         ),
-        child: SvgPicture.asset('assets/icons/${iconName}_${isSelected ? 'selected' : 'unselected'}.svg'),
+        child: SvgPicture.asset(
+          'assets/icons/${iconName}_${isSelected ? 'selected' : 'unselected'}.svg',
+        ),
       ),
     );
   }

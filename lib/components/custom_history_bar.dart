@@ -4,12 +4,13 @@ import 'package:ion/components/history/history_tap_bar.dart';
 import 'package:ion/enums/history_tap.dart';
 import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/store.dart';
+import 'package:ion/theme/app_colors.dart';
 
 import '../utils.dart';
 import 'history/history_chat_list.dart';
 
 class CustomHistoryBar extends StatefulWidget {
-  const CustomHistoryBar({super.key});
+  CustomHistoryBar({super.key});
 
   @override
   State<CustomHistoryBar> createState() => _CustomHistoryBarState();
@@ -21,6 +22,20 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
   HistoryTap selectTap = HistoryTap.chats;
   int _chatsCount = 0;
   int _savedCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    Store.isLightMode.addListener(_rebuild);
+  }
+
+  @override
+  void dispose() {
+    Store.isLightMode.removeListener(_rebuild);
+    super.dispose();
+  }
+
+  void _rebuild() => setState(() {});
 
   void changeTap(HistoryTap tap) {
     setState(() {
@@ -49,40 +64,41 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       padding: EdgeInsets.symmetric(vertical: 16),
       width: 350,
       height: sizeh(context),
-      color: Store.isLightMode.value
-          ? Color(0xffFFFFFF)
-          : Color(0xff282A2E),
+      color: AppColors.pageBackground,
       child: Column(
         spacing: 20,
         children: [
           Padding(
-           padding: const EdgeInsets.symmetric(horizontal: 16.0),
-           child: Column(
-             spacing: 20,
-             children: [
-               Row(
-                 mainAxisAlignment: .center,
-                 children: [
-                   Text('기록', style: TextStyle(
-                       color: Store.isLightMode.value ? Color(0xFF1E1F22) : Colors.white,
-                       fontSize: 22,
-                       fontWeight: .w700),
-                   ),
-                   Spacer(),
-                   newBtn(),
-                   SizedBox(width: 14),
-                   menuBtn(),
-                 ],
-               ),
-               HistoryTapBar(
-                 changeTap: changeTap,
-                 selectTap: selectTap,
-                 chatsCount: _chatsCount,
-                 savedCount: _savedCount,
-               ),
-               searchFilterBar(),
-             ],
-           ),
+            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              spacing: 20,
+              children: [
+                Row(
+                  mainAxisAlignment: .center,
+                  children: [
+                    Text(
+                      '기록',
+                      style: TextStyle(
+                        color: AppColors.historyTitle,
+                        fontSize: 22,
+                        fontWeight: .w700,
+                      ),
+                    ),
+                    Spacer(),
+                    newBtn(),
+                    SizedBox(width: 14),
+                    menuBtn(),
+                  ],
+                ),
+                HistoryTapBar(
+                  changeTap: changeTap,
+                  selectTap: selectTap,
+                  chatsCount: _chatsCount,
+                  savedCount: _savedCount,
+                ),
+                searchFilterBar(),
+              ],
+            ),
           ),
           HistoryChatList(
             key: _listKey,
@@ -106,9 +122,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
       height: 37,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(10),
-        color: (Store.isLightMode.value
-            ? Color(0xFFD6D6D6)
-            : Color(0xFF3F424A)).withValues(alpha: 0.25),
+        color: AppColors.searchBarBackground.withValues(alpha: 0.25),
       ),
       child: Row(
         spacing: 5,
@@ -149,12 +163,12 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     width: 38,
     height: 38,
     decoration: BoxDecoration(
-      color: Store.isLightMode.value
-          ? Color(0xffEFEFEF)
-          : Color(0xff1E1F22),
+      color: AppColors.historyIconBoxBackground,
       borderRadius: .circular(10),
     ),
-    child: SvgPicture.asset('assets/icons/search_filter.svg',),
+    child: SvgPicture.asset(
+      'assets/icons/search_filter.svg',
+    ),
   );
 
   Widget newBtn() => GestureDetector(
@@ -176,9 +190,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     width: 38,
     height: 38,
     decoration: BoxDecoration(
-      color: Store.isLightMode.value
-          ? Color(0xffEFEFEF)
-          : Color(0xff1E1F22),
+      color: AppColors.historyIconBoxBackground,
       borderRadius: .circular(10),
     ),
     child: SvgPicture.asset(

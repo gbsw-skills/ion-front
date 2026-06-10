@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ion/store.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,7 +14,7 @@ class AuthRepository {
     final response = await http.post(
       Uri.parse('${Store.baseUrl}/auth/login'),
       body: jsonEncode(body),
-      headers: {'Content-Type': 'application/json'}
+      headers: {'Content-Type': 'application/json'},
     );
 
     if (response.statusCode == 200) {
@@ -30,6 +31,8 @@ class AuthRepository {
       await prefs.setString('userRole', Store.userRole);
       await prefs.setString('displayName', Store.displayName);
       await prefs.setString('username', Store.username);
+      debugPrint('[AUTH] accessToken: ${Store.token}');
+      debugPrint('[AUTH] refreshToken: ${Store.refreshToken}');
       return 'success'; // 성공
     }
     if (response.statusCode == 401) {
@@ -41,9 +44,9 @@ class AuthRepository {
   Future<String> refresh() async {
     final body = {'refreshToken': Store.refreshToken};
     final response = await http.post(
-        Uri.parse('${Store.baseUrl}/auth/refresh'),
-        body: jsonEncode(body),
-        headers: {'Content-Type': 'application/json'}
+      Uri.parse('${Store.baseUrl}/auth/refresh'),
+      body: jsonEncode(body),
+      headers: {'Content-Type': 'application/json'},
     );
 
     if (response.statusCode == 200) {
@@ -63,11 +66,11 @@ class AuthRepository {
 
   Future<String> logout() async {
     final response = await http.post(
-        Uri.parse('${Store.baseUrl}/auth/logout'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer ${Store.token}'
-        }
+      Uri.parse('${Store.baseUrl}/auth/logout'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ${Store.token}',
+      },
     );
 
     Store.userRole = '';
