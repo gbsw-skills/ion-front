@@ -140,6 +140,17 @@ class AdminRepository {
     return [];
   }
 
+  Future<NoticeItem?> getNotice(int id) async {
+    final res = await http.get(
+      Uri.parse('${Store.baseUrl}/notices/$id'),
+      headers: _headers,
+    );
+    if (res.statusCode == 200) {
+      return NoticeItem.fromJson(jsonDecode(res.body)['data']);
+    }
+    return null;
+  }
+
   Future<bool> createNotice({
     required String title,
     required String content,

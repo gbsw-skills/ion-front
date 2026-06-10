@@ -54,11 +54,29 @@ class _AdminPageState extends State<AdminPage> {
   }
 
   Widget _topBar() => Container(
-    height: 56,
-    color: AppColors.surfaceBackground,
+    height: 60,
+    decoration: BoxDecoration(
+      color: AppColors.surfaceBackground,
+      border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
+    ),
     padding: EdgeInsets.symmetric(horizontal: 28),
     child: Row(
       children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: AppColors.accent.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          alignment: Alignment.center,
+          child: Icon(
+            Icons.admin_panel_settings_outlined,
+            size: 18,
+            color: AppColors.accent,
+          ),
+        ),
+        SizedBox(width: 12),
         Text(
           'ION 관리자',
           style: TextStyle(
@@ -70,14 +88,25 @@ class _AdminPageState extends State<AdminPage> {
         Spacer(),
         Text(
           Store.displayName,
-          style: TextStyle(fontSize: 14, color: AppColors.paginationText),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: AppColors.pageBtnIcon,
+          ),
         ),
+        SizedBox(width: 16),
+        Container(width: 1, height: 18, color: AppColors.cardDivider),
         SizedBox(width: 16),
         TextButton(
           onPressed: _logout,
+          style: TextButton.styleFrom(padding: EdgeInsets.zero),
           child: Text(
             '로그아웃',
-            style: TextStyle(fontSize: 13, color: AppColors.dangerText),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: AppColors.dangerText,
+            ),
           ),
         ),
       ],
@@ -85,14 +114,33 @@ class _AdminPageState extends State<AdminPage> {
   );
 
   Widget _sideNav() => Container(
-    width: 200,
-    color: AppColors.surfaceBackground,
-    padding: EdgeInsets.symmetric(vertical: 24, horizontal: 12),
+    width: 220,
+    decoration: BoxDecoration(
+      color: AppColors.surfaceBackground,
+      border: Border(right: BorderSide(color: AppColors.cardDivider)),
+    ),
+    padding: EdgeInsets.symmetric(vertical: 24, horizontal: 14),
     child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(10, 0, 0, 12),
+          child: Text(
+            '관리 메뉴',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
         _navItem('공지사항', Icons.campaign_outlined, _AdminSection.notices),
+        SizedBox(height: 4),
         _navItem('문서', Icons.folder_outlined, _AdminSection.documents),
+        SizedBox(height: 4),
         _navItem('LLM 엔드포인트', Icons.memory_outlined, _AdminSection.llm),
+        SizedBox(height: 4),
         _navItem('감사 로그', Icons.history, _AdminSection.logs),
       ],
     ),
@@ -102,14 +150,15 @@ class _AdminPageState extends State<AdminPage> {
     final selected = _section == section;
     return GestureDetector(
       onTap: () => setState(() => _section = section),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 4),
-        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 120),
+        width: double.infinity,
+        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
           color: selected
               ? AppColors.historyItemSelectedBackground
               : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
           spacing: 10,
@@ -168,6 +217,7 @@ class _NoticesSection extends StatefulWidget {
 class _NoticesSectionState extends State<_NoticesSection> {
   List<NoticeItem> _notices = [];
   bool _loading = true;
+  int? _detailLoadingId;
 
   @override
   void initState() {
@@ -201,55 +251,91 @@ class _NoticesSectionState extends State<_NoticesSection> {
     );
   }
 
-  Widget _noticeCard(NoticeItem n) => Container(
-    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-    decoration: BoxDecoration(
-      color: AppColors.surfaceBackground,
-      borderRadius: BorderRadius.circular(10),
-    ),
-    child: Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            spacing: 4,
-            children: [
-              Text(
-                n.title,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
+  Widget _noticeCard(NoticeItem n) => GestureDetector(
+    onTap: () => _openDetail(n),
+    child: Container(
+      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceBackground,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.cardDivider),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              spacing: 4,
+              children: [
+                Text(
+                  n.title,
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  '${n.authorName}  ·  ${_fmtDate(n.publishedAt)}',
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          ),
+          if (_detailLoadingId == n.id)
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 8),
+              child: SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.accent,
                 ),
               ),
-              Text(
-                '${n.authorName}  ·  ${_fmtDate(n.publishedAt)}',
-                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
-              ),
-            ],
+            )
+          else
+            _IconBtn(
+              Icons.edit_outlined,
+              AppColors.paginationText,
+              () => _showForm(context, notice: n),
+            ),
+          SizedBox(width: 4),
+          _IconBtn(
+            Icons.delete_outline,
+            AppColors.deleteButton,
+            () => _confirmDelete(context, n),
           ),
-        ),
-        _IconBtn(
-          Icons.edit_outlined,
-          AppColors.paginationText,
-          () => _showForm(context, notice: n),
-        ),
-        SizedBox(width: 4),
-        _IconBtn(
-          Icons.delete_outline,
-          AppColors.deleteButton,
-          () => _confirmDelete(context, n),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 
-  void _showForm(BuildContext ctx, {NoticeItem? notice}) {
+  Future<void> _openDetail(NoticeItem n) async {
+    setState(() => _detailLoadingId = n.id);
+    final detail = await widget.repo.getNotice(n.id);
+    if (!mounted) return;
+    setState(() => _detailLoadingId = null);
+    showDialog(
+      context: context,
+      builder: (_) => _NoticeDetailDialog(notice: detail ?? n),
+    );
+  }
+
+  Future<void> _showForm(BuildContext ctx, {NoticeItem? notice}) async {
+    var full = notice;
+    if (notice != null) {
+      setState(() => _detailLoadingId = notice.id);
+      full = await widget.repo.getNotice(notice.id) ?? notice;
+      if (!mounted) return;
+      setState(() => _detailLoadingId = null);
+    }
+    if (!ctx.mounted) return;
     showDialog(
       context: ctx,
       builder: (_) => _NoticeFormDialog(
         repo: widget.repo,
-        notice: notice,
+        notice: full,
         onSaved: _load,
       ),
     );
@@ -341,6 +427,70 @@ class _NoticeFormDialogState extends State<_NoticeFormDialog> {
   }
 }
 
+class _NoticeDetailDialog extends StatelessWidget {
+  _NoticeDetailDialog({required this.notice});
+  final NoticeItem notice;
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: AppColors.dialogBackground,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Container(
+        width: 560,
+        constraints: BoxConstraints(maxHeight: 520),
+        padding: EdgeInsets.all(28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              notice.title,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            SizedBox(height: 8),
+            Text(
+              '${notice.authorName}  ·  ${_fmtDate(notice.publishedAt)}',
+              style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+            ),
+            SizedBox(height: 20),
+            Divider(height: 1, color: AppColors.cardDivider),
+            SizedBox(height: 20),
+            Flexible(
+              child: SingleChildScrollView(
+                child: Text(
+                  notice.content?.isNotEmpty == true
+                      ? notice.content!
+                      : '내용이 없습니다.',
+                  style: TextStyle(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  '닫기',
+                  style: TextStyle(color: AppColors.paginationText),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ── 문서 ────────────────────────────────────────────────
 class _DocumentsSection extends StatefulWidget {
   _DocumentsSection({required this.repo});
@@ -390,7 +540,8 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     decoration: BoxDecoration(
       color: AppColors.surfaceBackground,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.cardDivider),
     ),
     child: Row(
       children: [
@@ -656,10 +807,10 @@ class _LlmSectionState extends State<_LlmSection> {
     padding: EdgeInsets.all(20),
     decoration: BoxDecoration(
       color: AppColors.surfaceBackground,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       border: ep.isDefault
           ? Border.all(color: AppColors.accent, width: 1.5)
-          : null,
+          : Border.all(color: AppColors.cardDivider),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1111,7 +1262,8 @@ class _LogsSectionState extends State<_LogsSection> {
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
       color: AppColors.surfaceBackground,
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: AppColors.cardDivider),
     ),
     child: Row(
       spacing: 16,
@@ -1155,7 +1307,10 @@ class _SectionScaffold extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          color: AppColors.surfaceBackground,
+          decoration: BoxDecoration(
+            color: AppColors.surfaceBackground,
+            border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
+          ),
           padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           child: Row(
             children: [

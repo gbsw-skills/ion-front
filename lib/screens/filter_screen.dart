@@ -13,7 +13,10 @@ class FilterScreen extends StatefulWidget {
   State<FilterScreen> createState() => _FilterScreenState();
 }
 
+enum _Tab { notices, documents }
+
 class _FilterScreenState extends State<FilterScreen> {
+  final _adminRepo = AdminRepository();
   final _searchCtrl = TextEditingController();
   List<NoticeItem> _notices = [];
   bool _loading = true;
@@ -22,11 +25,17 @@ class _FilterScreenState extends State<FilterScreen> {
   int _totalPages = 1;
   static final _pageSize = 20;
 
+  _Tab _tab = _Tab.notices;
+  List<DocumentItem> _docs = [];
+  bool _docsLoading = true;
+  bool _docsHasError = false;
+
   @override
   void initState() {
     super.initState();
     Store.isLightMode.addListener(_rebuild);
     _load();
+    _loadDocs();
   }
 
   @override
@@ -85,6 +94,29 @@ class _FilterScreenState extends State<FilterScreen> {
     }
   }
 
+  Future<void> _loadDocs() async {
+    setState(() {
+      _docsLoading = true;
+      _docsHasError = false;
+    });
+    try {
+      final docs = await _adminRepo.getDocuments(size: 50);
+      if (mounted) {
+        setState(() {
+          _docs = docs;
+          _docsLoading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() {
+          _docsLoading = false;
+          _docsHasError = true;
+        });
+      }
+    }
+  }
+
   Future<NoticeItem?> _fetchDetail(int id) async {
     final res = await http.get(
       Uri.parse('${Store.baseUrl}/notices/$id'),
@@ -118,13 +150,19 @@ class _FilterScreenState extends State<FilterScreen> {
         children: [
           Padding(
             padding: EdgeInsets.fromLTRB(27, 18, 18, 4),
-            child: Text(
-              '공지사항',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textPrimary,
-              ),
+            child: Row(
+              children: [
+                Text(
+                  '공지사항',
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Spacer(),
+                _tabControl(),
+              ],
             ),
           ),
           SizedBox(height: 14),
@@ -136,20 +174,155 @@ class _FilterScreenState extends State<FilterScreen> {
                 color: AppColors.cardBackground,
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Column(
-                children: [
-                  _searchBar(isLight),
-                  Expanded(child: _body(isLight)),
-                  if (!_loading && !_hasError && _totalPages > 1)
-                    _pagination(isLight),
-                ],
-              ),
+              child: _tab == _Tab.notices
+                  ? Column(
+                      children: [
+                        _searchBar(isLight),
+                        Expanded(child: _body(isLight)),
+                        if (!_loading && !_hasError && _totalPages > 1)
+                          _pagination(isLight),
+                      ],
+                    )
+                  : _docsBody(isLight),
             ),
           ),
         ],
       ),
     );
   }
+
+  Widget _tabControl() => Container(
+    height: 38,
+    padding: EdgeInsets.all(3),
+    decoration: BoxDecoration(
+      color: AppColors.themeTogglePillBackground,
+      borderRadius: BorderRadius.circular(10),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: {'공지사항': _Tab.notices, '자료실': _Tab.documents}.entries.map((
+        e,
+      ) {
+        final selected = e.value == _tab;
+        return GestureDetector(
+          onTap: () => setState(() => _tab = e.value),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: selected
+                  ? AppColors.themeTogglePillThumb
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              e.key,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: selected ? FontWeight.w700 : FontWeight.normal,
+                color: selected ? AppColors.textPrimary : AppColors.textMuted,
+              ),
+            ),
+          ),
+        );
+      }).toList(),
+    ),
+  );
+
+  Widget _docsBody(bool isLight) {
+    if (_docsLoading) {
+      return Center(
+        child: CircularProgressIndicator(
+          color: AppColors.accent,
+          strokeWidth: 2,
+        ),
+      );
+    }
+    if (_docsHasError) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          spacing: 12,
+          children: [
+            Text('불러오기 실패', style: TextStyle(color: AppColors.textSecondary)),
+            GestureDetector(
+              onTap: _loadDocs,
+              child: Text(
+                '다시 시도',
+                style: TextStyle(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (_docs.isEmpty) {
+      return Center(
+        child: Text(
+          '등록된 자료가 없습니다.',
+          style: TextStyle(color: AppColors.textSecondary),
+        ),
+      );
+    }
+    return ListView.separated(
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16),
+      itemCount: _docs.length,
+      separatorBuilder: (_, i) => SizedBox(height: 8),
+      itemBuilder: (_, i) => _docCard(_docs[i]),
+    );
+  }
+
+  Widget _docCard(DocumentItem d) => Container(
+    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+    decoration: BoxDecoration(
+      color: AppColors.surfaceBackground,
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: AppColors.cardDivider),
+    ),
+    child: Row(
+      children: [
+        Container(
+          padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          decoration: BoxDecoration(
+            color: AppColors.cardDivider,
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Text(
+            d.fileType.toUpperCase(),
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: AppColors.paginationText,
+            ),
+          ),
+        ),
+        SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            spacing: 4,
+            children: [
+              Text(
+                d.title,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              Text(
+                _fmtDate(d.uploadedAt),
+                style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
 
   Widget _searchBar(bool isLight) => Padding(
     padding: EdgeInsets.fromLTRB(20, 16, 20, 8),
@@ -413,6 +586,7 @@ class _NoticeDetailDialogState extends State<_NoticeDetailDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      backgroundColor: AppColors.dialogBackground,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Container(
         width: 600,
@@ -423,7 +597,11 @@ class _NoticeDetailDialogState extends State<_NoticeDetailDialog> {
           children: [
             Text(
               widget.notice.title,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: AppColors.textPrimary,
+              ),
             ),
             SizedBox(height: 8),
             Row(
@@ -431,29 +609,23 @@ class _NoticeDetailDialogState extends State<_NoticeDetailDialog> {
               children: [
                 Text(
                   widget.notice.authorName,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9CA3AF),
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
-                Text('·', style: TextStyle(color: Color(0xFF9CA3AF))),
+                Text('·', style: TextStyle(color: AppColors.textMuted)),
                 Text(
                   _fmtDate(widget.notice.publishedAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF9CA3AF),
-                  ),
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
                 ),
               ],
             ),
             SizedBox(height: 20),
-            Divider(height: 1, color: Color(0xFFE5E7EB)),
+            Divider(height: 1, color: AppColors.cardDivider),
             SizedBox(height: 20),
             Expanded(
               child: _loading
                   ? Center(
                       child: CircularProgressIndicator(
-                        color: Color(0xFF10A37F),
+                        color: AppColors.accent,
                         strokeWidth: 2,
                       ),
                     )
@@ -463,7 +635,7 @@ class _NoticeDetailDialogState extends State<_NoticeDetailDialog> {
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.7,
-                          color: Color(0xFF374151),
+                          color: AppColors.textPrimary,
                         ),
                       ),
                     ),
@@ -475,7 +647,7 @@ class _NoticeDetailDialogState extends State<_NoticeDetailDialog> {
                 onPressed: () => Navigator.pop(context),
                 child: Text(
                   '닫기',
-                  style: TextStyle(color: Color(0xFF6B7280)),
+                  style: TextStyle(color: AppColors.paginationText),
                 ),
               ),
             ),
