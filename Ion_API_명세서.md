@@ -386,7 +386,7 @@ export async function sendChatMessage(
     {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${accessdToken}`,
         Accept: "text/event-stream",
       },
       signal: abortController.signal,
