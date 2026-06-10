@@ -16,7 +16,7 @@ import '../store.dart';
 import '../theme/app_colors.dart';
 
 class ChatScreen extends StatefulWidget {
-  ChatScreen({super.key});
+  const ChatScreen({super.key});
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
