@@ -1,5 +1,6 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:ion/repositories/admin_repository.dart';
 import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/login_screen.dart';
@@ -92,6 +93,25 @@ class _AdminPageState extends State<AdminPage> {
             fontSize: 14,
             fontWeight: FontWeight.w500,
             color: AppColors.pageBtnIcon,
+          ),
+        ),
+        SizedBox(width: 16),
+        GestureDetector(
+          onTap: () =>
+              Store.isLightMode.value = !Store.isLightMode.value,
+          child: Container(
+            width: 34,
+            height: 34,
+            padding: EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: AppColors.sidebarButtonBackground,
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: SvgPicture.asset(
+              Store.isLightMode.value
+                  ? 'assets/icons/dark.svg'
+                  : 'assets/icons/dark_light.svg',
+            ),
           ),
         ),
         SizedBox(width: 16),
