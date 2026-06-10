@@ -43,6 +43,13 @@ class HistoryChatListState extends State<HistoryChatList> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadSessions());
+    Store.chatListRefresh.addListener(_loadSessions);
+  }
+
+  @override
+  void dispose() {
+    Store.chatListRefresh.removeListener(_loadSessions);
+    super.dispose();
   }
 
   Future<void> reload() => _loadSessions();
@@ -91,6 +98,15 @@ class HistoryChatListState extends State<HistoryChatList> {
         _isLoading = false;
       });
       _notifyCounts();
+
+      // 현재 보고 있는 채팅방의 제목이 바뀌었다면 헤더 제목도 갱신
+      final selectedId = Store.selectedSessionId.value;
+      if (selectedId.isNotEmpty) {
+        final selected = _allChats.where((c) => c.id == selectedId);
+        if (selected.isNotEmpty) {
+          Store.selectedSessionTitle.value = selected.first.title;
+        }
+      }
     } catch (_) {
       setState(() {
         _isLoading = false;

@@ -36,6 +36,10 @@ class _ChatScreenState extends State<ChatScreen> {
     Store.selectedSessionId.addListener(_onSessionChanged);
     Store.isLightMode.addListener(_rebuild);
     _chatController.addListener(_onInputChanged);
+
+    // 다른 탭에 갔다가 돌아오면 ChatScreen이 새로 생성되므로,
+    // 이미 선택된 세션이 있다면 메시지를 다시 불러온다
+    if (Store.selectedSessionId.value.isNotEmpty) _loadMessages();
   }
 
   @override
@@ -82,6 +86,8 @@ class _ChatScreenState extends State<ChatScreen> {
     if (content.trim().isEmpty) return;
     final sessionId = Store.selectedSessionId.value;
     if (sessionId.isEmpty || _isStreaming) return;
+
+    final isFirstMessage = _messages.isEmpty;
 
     _chatController.clear();
 
@@ -135,6 +141,9 @@ class _ChatScreenState extends State<ChatScreen> {
     }
 
     if (mounted) setState(() => _isStreaming = false);
+
+    // 첫 메시지였다면 백엔드가 생성한 세션 제목을 반영하기 위해 채팅 목록을 새로고침
+    if (isFirstMessage) Store.chatListRefresh.value++;
   }
 
   @override

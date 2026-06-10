@@ -7,6 +7,8 @@ class Store {
   static ValueNotifier<int> selectedChatIndex = ValueNotifier(0);
   static ValueNotifier<String> selectedSessionId = ValueNotifier('');
   static ValueNotifier<String> selectedSessionTitle = ValueNotifier('');
+  // 값이 바뀔 때마다 채팅 목록을 다시 불러오라는 신호
+  static ValueNotifier<int> chatListRefresh = ValueNotifier(0);
   static ValueNotifier<int> currentIndex = ValueNotifier(0);
   static String baseUrl = 'http://ion.gbsw.hs.kr/api/v1';
   static List<String> tabBarList = ['chat', 'filter', 'compass', 'settings'];
