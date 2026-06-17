@@ -126,7 +126,9 @@ class _ChatScreenState extends State<ChatScreen> {
     //  고정 주기 throttle을 쓴다)
     var liveBuffer = '';
     final throttle = Timer.periodic(const Duration(milliseconds: 80), (_) {
-      if (!mounted || liveBuffer == _messages[0].content) return;
+      if (!mounted || _messages.isEmpty || liveBuffer == _messages[0].content) {
+        return;
+      }
       setState(() {
         _messages[0] = ChatModel(isMine: false, content: liveBuffer);
       });
@@ -146,7 +148,7 @@ class _ChatScreenState extends State<ChatScreen> {
       throttle.cancel();
     }
 
-    if (!mounted) return;
+    if (!mounted || _messages.isEmpty) return;
     setState(() {
       _messages[0] = ChatModel(isMine: false, content: liveBuffer);
       _isStreaming = false;
