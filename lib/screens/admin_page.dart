@@ -57,8 +57,8 @@ class _AdminPageState extends State<AdminPage> {
   Widget _topBar() => Container(
     height: 60,
     decoration: BoxDecoration(
-      color: AppColors.sidebarBackground,
-      border: Border(bottom: BorderSide(color: AppColors.sidebarBorder)),
+      color: AppColors.surfaceBackground,
+      border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
     ),
     padding: EdgeInsets.symmetric(horizontal: 28),
     child: Row(
@@ -96,9 +96,7 @@ class _AdminPageState extends State<AdminPage> {
           ),
         ),
         SizedBox(width: 16),
-        ThemeTogglePill(axis: Axis.horizontal),
-        SizedBox(width: 16),
-        Container(width: 1, height: 18, color: AppColors.sidebarBorder),
+        Container(width: 1, height: 18, color: AppColors.cardDivider),
         SizedBox(width: 16),
         TextButton(
           onPressed: _logout,
@@ -119,8 +117,8 @@ class _AdminPageState extends State<AdminPage> {
   Widget _sideNav() => Container(
     width: 220,
     decoration: BoxDecoration(
-      color: AppColors.sidebarBackground,
-      border: Border(right: BorderSide(color: AppColors.sidebarBorder)),
+      color: AppColors.surfaceBackground,
+      border: Border(right: BorderSide(color: AppColors.cardDivider)),
     ),
     padding: EdgeInsets.symmetric(vertical: 24, horizontal: 14),
     child: Column(
@@ -157,11 +155,14 @@ class _AdminPageState extends State<AdminPage> {
     final selected = _section == section;
     return GestureDetector(
       onTap: () => setState(() => _section = section),
-      child: Container(
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 120),
         width: double.infinity,
         padding: EdgeInsets.symmetric(horizontal: 12, vertical: 11),
         decoration: BoxDecoration(
-          color: selected ? AppColors.adminNavSelected : Colors.transparent,
+          color: selected
+              ? AppColors.historyItemSelectedBackground
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
         ),
         child: Row(
@@ -204,7 +205,7 @@ class _AdminPageState extends State<AdminPage> {
     if (!mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => LoginScreen()),
-      (_) => false,
+          (_) => false,
     );
   }
 }
@@ -247,11 +248,11 @@ class _NoticesSectionState extends State<_NoticesSection> {
       child: _notices.isEmpty
           ? _EmptyHint('등록된 공지사항이 없습니다.')
           : ListView.separated(
-              padding: EdgeInsets.all(24),
-              itemCount: _notices.length,
-              separatorBuilder: (_, i) => SizedBox(height: 8),
-              itemBuilder: (_, i) => _noticeCard(_notices[i]),
-            ),
+        padding: EdgeInsets.all(24),
+        itemCount: _notices.length,
+        separatorBuilder: (_, i) => SizedBox(height: 8),
+        itemBuilder: (_, i) => _noticeCard(_notices[i]),
+      ),
     );
   }
 
@@ -260,9 +261,9 @@ class _NoticesSectionState extends State<_NoticesSection> {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       decoration: BoxDecoration(
-        color: AppColors.dialogBackground,
+        color: AppColors.surfaceBackground,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.sidebarBorder),
+        border: Border.all(color: AppColors.cardDivider),
       ),
       child: Row(
         children: [
@@ -302,13 +303,13 @@ class _NoticesSectionState extends State<_NoticesSection> {
             _IconBtn(
               Icons.edit_outlined,
               AppColors.paginationText,
-              () => _showForm(context, notice: n),
+                  () => _showForm(context, notice: n),
             ),
           SizedBox(width: 4),
           _IconBtn(
             Icons.delete_outline,
             AppColors.deleteButton,
-            () => _confirmDelete(context, n),
+                () => _confirmDelete(context, n),
           ),
         ],
       ),
@@ -461,7 +462,7 @@ class _NoticeDetailDialog extends StatelessWidget {
               style: TextStyle(fontSize: 12, color: AppColors.textMuted),
             ),
             SizedBox(height: 20),
-            Divider(height: 1, color: AppColors.sidebarBorder),
+            Divider(height: 1, color: AppColors.cardDivider),
             SizedBox(height: 20),
             Flexible(
               child: SingleChildScrollView(
@@ -532,27 +533,27 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
       child: _docs.isEmpty
           ? _EmptyHint('등록된 문서가 없습니다.')
           : ListView.separated(
-              padding: EdgeInsets.all(24),
-              itemCount: _docs.length,
-              separatorBuilder: (_, i) => SizedBox(height: 8),
-              itemBuilder: (_, i) => _docCard(_docs[i]),
-            ),
+        padding: EdgeInsets.all(24),
+        itemCount: _docs.length,
+        separatorBuilder: (_, i) => SizedBox(height: 8),
+        itemBuilder: (_, i) => _docCard(_docs[i]),
+      ),
     );
   }
 
   Widget _docCard(DocumentItem d) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 14),
     decoration: BoxDecoration(
-      color: AppColors.dialogBackground,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.sidebarBorder),
+      border: Border.all(color: AppColors.cardDivider),
     ),
     child: Row(
       children: [
         Container(
           padding: EdgeInsets.symmetric(horizontal: 8, vertical: 3),
           decoration: BoxDecoration(
-            color: AppColors.adminBackground,
+            color: AppColors.cardDivider,
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
@@ -588,7 +589,7 @@ class _DocumentsSectionState extends State<_DocumentsSection> {
         _IconBtn(
           Icons.delete_outline,
           AppColors.deleteButton,
-          () => _confirmDelete(context, d),
+              () => _confirmDelete(context, d),
         ),
       ],
     ),
@@ -799,22 +800,22 @@ class _LlmSectionState extends State<_LlmSection> {
       child: _endpoints.isEmpty
           ? _EmptyHint('등록된 LLM 엔드포인트가 없습니다.')
           : ListView.separated(
-              padding: EdgeInsets.all(24),
-              itemCount: _endpoints.length,
-              separatorBuilder: (_, i) => SizedBox(height: 12),
-              itemBuilder: (_, i) => _endpointCard(_endpoints[i]),
-            ),
+        padding: EdgeInsets.all(24),
+        itemCount: _endpoints.length,
+        separatorBuilder: (_, i) => SizedBox(height: 12),
+        itemBuilder: (_, i) => _endpointCard(_endpoints[i]),
+      ),
     );
   }
 
   Widget _endpointCard(LlmEndpoint ep) => Container(
     padding: EdgeInsets.all(20),
     decoration: BoxDecoration(
-      color: AppColors.dialogBackground,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(12),
       border: ep.isDefault
           ? Border.all(color: AppColors.accent, width: 1.5)
-          : Border.all(color: AppColors.sidebarBorder),
+          : Border.all(color: AppColors.cardDivider),
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -848,7 +849,7 @@ class _LlmSectionState extends State<_LlmSection> {
               child: _IconBtn(
                 ep.enabled ? Icons.toggle_on : Icons.toggle_off,
                 ep.enabled ? AppColors.infoBadge : AppColors.borderMuted,
-                () => _toggleEnabled(ep),
+                    () => _toggleEnabled(ep),
               ),
             ),
             // 기본값 설정
@@ -863,12 +864,12 @@ class _LlmSectionState extends State<_LlmSection> {
             _IconBtn(
               Icons.edit_outlined,
               AppColors.paginationText,
-              () => _showForm(context, endpoint: ep),
+                  () => _showForm(context, endpoint: ep),
             ),
             _IconBtn(
               Icons.delete_outline,
               AppColors.deleteButton,
-              () => _confirmDelete(context, ep),
+                  () => _confirmDelete(context, ep),
             ),
           ],
         ),
@@ -1174,13 +1175,13 @@ class _LlmFormDialogState extends State<_LlmFormDialog> {
                     ),
                     child: _saving
                         ? SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
-                            ),
-                          )
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
                         : Text('저장'),
                   ),
                 ],
@@ -1254,20 +1255,20 @@ class _LogsSectionState extends State<_LogsSection> {
       child: _logs.isEmpty
           ? _EmptyHint('로그가 없습니다.')
           : ListView.separated(
-              padding: EdgeInsets.all(24),
-              itemCount: _logs.length,
-              separatorBuilder: (_, i) => SizedBox(height: 8),
-              itemBuilder: (_, i) => _logCard(_logs[i]),
-            ),
+        padding: EdgeInsets.all(24),
+        itemCount: _logs.length,
+        separatorBuilder: (_, i) => SizedBox(height: 8),
+        itemBuilder: (_, i) => _logCard(_logs[i]),
+      ),
     );
   }
 
   Widget _logCard(LogItem l) => Container(
     padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
     decoration: BoxDecoration(
-      color: AppColors.dialogBackground,
+      color: AppColors.surfaceBackground,
       borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: AppColors.sidebarBorder),
+      border: Border.all(color: AppColors.cardDivider),
     ),
     child: Row(
       spacing: 16,
@@ -1312,8 +1313,8 @@ class _SectionScaffold extends StatelessWidget {
       children: [
         Container(
           decoration: BoxDecoration(
-            color: AppColors.sidebarBackground,
-            border: Border(bottom: BorderSide(color: AppColors.sidebarBorder)),
+            color: AppColors.surfaceBackground,
+            border: Border(bottom: BorderSide(color: AppColors.cardDivider)),
           ),
           padding: EdgeInsets.symmetric(horizontal: 28, vertical: 18),
           child: Row(
@@ -1334,11 +1335,11 @@ class _SectionScaffold extends StatelessWidget {
         Expanded(
           child: loading
               ? Center(
-                  child: CircularProgressIndicator(
-                    color: AppColors.accent,
-                    strokeWidth: 2,
-                  ),
-                )
+            child: CircularProgressIndicator(
+              color: AppColors.accent,
+              strokeWidth: 2,
+            ),
+          )
               : child,
         ),
       ],
@@ -1456,13 +1457,13 @@ class _FormDialog extends StatelessWidget {
                   ),
                   child: saving
                       ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            color: Colors.white,
-                            strokeWidth: 2,
-                          ),
-                        )
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
                       : Text('저장'),
                 ),
               ],

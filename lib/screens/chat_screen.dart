@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_highlight/flutter_highlight.dart';
 import 'package:flutter_highlight/themes/atom-one-dark.dart';
 import 'package:flutter_highlight/themes/github.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:highlight/highlight.dart' show highlight;
 import 'package:highlight/languages/all.dart' show allLanguages;
@@ -14,6 +14,7 @@ import 'package:markdown/markdown.dart' as md;
 import '../models/chat_model.dart';
 import '../store.dart';
 import '../theme/app_colors.dart';
+import '../utils.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -426,21 +427,37 @@ class _ChatScreenState extends State<ChatScreen> {
             offset: Offset(-30, -30),
             child: Row(
               children: [
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: chat.isMine ? Colors.transparent : Color(0xff10A37F),
-                    borderRadius: .circular(10),
-                    image: DecorationImage(
-                      image: AssetImage(
-                        'assets/images/${chat.isMine ? 'user' : 'chat_gpt'}.png',
+                chat.isMine
+                    ? Container(
+                        width: 45,
+                        height: 45,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: Color(0xFF6366F1),
+                          borderRadius: .circular(10),
+                        ),
+                        child: Text(
+                          initials(Store.displayName),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      )
+                    : Container(
+                        width: 45,
+                        height: 45,
+                        decoration: BoxDecoration(
+                          color: Color(0xff10A37F),
+                          borderRadius: .circular(10),
+                          image: DecorationImage(
+                            image: AssetImage('assets/images/chat_gpt.png'),
+                            fit: .cover,
+                            onError: (_, e) => SizedBox(),
+                          ),
+                        ),
                       ),
-                      fit: .cover,
-                      onError: (_, e) => SizedBox(),
-                    ),
-                  ),
-                ),
                 SizedBox(width: 10),
                 Transform.translate(
                   offset: Offset(0, -8),
