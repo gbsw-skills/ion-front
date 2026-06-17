@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:code_text_field/code_text_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -119,30 +121,36 @@ class _ChatScreenState extends State<ChatScreen> {
       _messages.insert(0, ChatModel(isMine: false, content: ''));
     });
 
+    // 토큰은 로컬 버퍼에만 모으고, 80ms 주기로만 setState해 리빌드 빈도를 낮춘다.
+    // (debounce는 토큰이 끊김 없이 연속 도착하는 동안 한 번도 flush되지 않을 수 있어
+    //  고정 주기 throttle을 쓴다)
+    var liveBuffer = '';
+    final throttle = Timer.periodic(const Duration(milliseconds: 80), (_) {
+      if (!mounted || liveBuffer == _messages[0].content) return;
+      setState(() {
+        _messages[0] = ChatModel(isMine: false, content: liveBuffer);
+      });
+    });
+
     // token 이벤트 누적, done 오면 종료
     try {
       await for (final token in stream) {
-        if (!mounted) return;
-        setState(() {
-          _messages[0] = ChatModel(
-            isMine: false,
-            content: _messages[0].content + token,
-          );
-        });
+        if (!mounted) break;
+        liveBuffer += token;
       }
     } catch (_) {
-      if (!mounted) return;
-      setState(() {
-        if (_messages[0].content.isEmpty) {
-          _messages[0] = ChatModel(
-            isMine: false,
-            content: '⚠️ 응답을 받아오지 못했어요. 다시 시도해주세요.',
-          );
-        }
-      });
+      if (liveBuffer.isEmpty) {
+        liveBuffer = '⚠️ 응답을 받아오지 못했어요. 다시 시도해주세요.';
+      }
+    } finally {
+      throttle.cancel();
     }
 
-    if (mounted) setState(() => _isStreaming = false);
+    if (!mounted) return;
+    setState(() {
+      _messages[0] = ChatModel(isMine: false, content: liveBuffer);
+      _isStreaming = false;
+    });
 
     // 첫 메시지였다면 백엔드가 생성한 세션 제목을 반영하기 위해 채팅 목록을 새로고침
     if (isFirstMessage) Store.chatListRefresh.value++;
