@@ -35,5 +35,10 @@ void main() {
       healStreamingMarkdown(input);
       expect(input, beforeCall);
     });
+
+    test('들여쓰기된 코드펜스도 펜스로 인식해 닫는 펜스를 추가한다', () {
+      const input = '1. 예시\n  ```dart\n  print(1);';
+      expect(healStreamingMarkdown(input), '$input\n```');
+    });
   });
 }

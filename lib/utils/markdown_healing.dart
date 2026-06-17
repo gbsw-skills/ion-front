@@ -5,7 +5,7 @@
 /// 코드펜스 안쪽 텍스트는 인라인 보정 대상에서 제외된다.
 String healStreamingMarkdown(String source) {
   final fenceCount = RegExp(
-    r'^```',
+    r'^ {0,3}```',
     multiLine: true,
   ).allMatches(source).length;
 
