@@ -14,6 +14,7 @@ import 'package:markdown/markdown.dart' as md;
 import '../models/chat_model.dart';
 import '../store.dart';
 import '../theme/app_colors.dart';
+import '../utils/markdown_healing.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -339,7 +340,7 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _messageItem(ChatModel chat) {
+  Widget _messageItem(ChatModel chat, {required bool isLive}) {
     final bubbleColor = chat.isMine
         ? AppColors.chatBubbleMine
         : AppColors.chatBubbleOther;
@@ -355,7 +356,7 @@ class _ChatScreenState extends State<ChatScreen> {
           child: chat.content.isEmpty
               ? _streamingIndicator()
               : MarkdownBody(
-                  data: chat.content,
+                  data: isLive ? healStreamingMarkdown(chat.content) : chat.content,
                   builders: {
                     'pre': _CodeBlockBuilder(
                       isLight: Store.isLightMode.value,
@@ -491,13 +492,17 @@ class _ChatScreenState extends State<ChatScreen> {
                 itemCount: _messages.length,
                 scrollDirection: .vertical,
                 separatorBuilder: (_, i) => SizedBox(height: 64),
-                itemBuilder: (_, index) => Center(
-                  child: Container(
-                    padding: EdgeInsets.symmetric(horizontal: 15),
-                    constraints: BoxConstraints(maxWidth: 950),
-                    child: _messageItem(_messages[index]),
-                  ),
-                ),
+                itemBuilder: (_, index) {
+                  final chat = _messages[index];
+                  final isLive = index == 0 && !chat.isMine && _isStreaming;
+                  return Center(
+                    child: Container(
+                      padding: EdgeInsets.symmetric(horizontal: 15),
+                      constraints: BoxConstraints(maxWidth: 950),
+                      child: _messageItem(chat, isLive: isLive),
+                    ),
+                  );
+                },
               ),
             ),
           ),
