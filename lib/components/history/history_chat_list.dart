@@ -118,7 +118,6 @@ class HistoryChatListState extends State<HistoryChatList> {
   HistoryChatModel _sessionToModel(ChatSession s, List<String> savedIds) =>
       HistoryChatModel(
         id: s.sessionId,
-        isPinned: false,
         isSaved: savedIds.contains(s.sessionId),
         lastMessageAt: DateTime.tryParse(s.lastActiveAt) ?? DateTime.now(),
         title: s.title,
@@ -264,7 +263,7 @@ class HistoryChatListState extends State<HistoryChatList> {
                 child: SizedBox(
                   width: 15,
                   height: 15,
-                  child: chat.isPinned
+                  child: chat.isSaved
                       ? SvgPicture.asset('assets/icons/union.svg')
                       : null,
                 ),

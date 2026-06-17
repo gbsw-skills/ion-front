@@ -3,6 +3,7 @@ import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/login_screen.dart';
 import 'package:ion/store.dart';
 import 'package:ion/theme/app_colors.dart';
+import 'package:ion/utils.dart';
 
 class SettingsScreen extends StatefulWidget {
   SettingsScreen({super.key});
@@ -38,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final isLight = Store.isLightMode.value;
-    final initials = _initials(Store.displayName);
+    final userInitials = initials(Store.displayName);
 
     return Expanded(
       child: Column(
@@ -83,7 +84,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 radius: 36,
                                 backgroundColor: Color(0xFF10A37F),
                                 child: Text(
-                                  initials,
+                                  userInitials,
                                   style: TextStyle(
                                     fontSize: 22,
                                     fontWeight: FontWeight.bold,
@@ -312,9 +313,3 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 }
 
-String _initials(String name) {
-  if (name.isEmpty) return '?';
-  final trimmed = name.trim();
-  if (trimmed.length >= 2) return trimmed.substring(0, 2);
-  return trimmed;
-}

@@ -1,6 +1,5 @@
 class HistoryChatModel {
   final String id;
-  final bool isPinned;
   final bool isSaved;
   final DateTime lastMessageAt;
   final String title;
@@ -8,7 +7,6 @@ class HistoryChatModel {
 
   HistoryChatModel({
     required this.id, // sessionId (UUID)
-    required this.isPinned,
     required this.isSaved,
     required this.lastMessageAt,
     required this.title,
@@ -17,7 +15,6 @@ class HistoryChatModel {
 
   HistoryChatModel copyWith({bool? isSaved}) => HistoryChatModel(
         id: id,
-        isPinned: isPinned,
         isSaved: isSaved ?? this.isSaved,
         lastMessageAt: lastMessageAt,
         title: title,
