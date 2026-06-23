@@ -30,6 +30,12 @@ class _ChatScreenState extends State<ChatScreen> {
   List<ChatModel> _messages = [];
   bool _isStreaming = false;
   bool _isCodeInput = false;
+  bool _isLoadingMessages = false;
+  bool _isCreatingSession = false;
+
+  // 새 채팅을 직접 생성해 selectedSessionId를 바꿀 때, 메시지 목록을
+  // 비웠다가 다시 불러오는 _onSessionChanged의 기본 동작을 한 번 건너뛰기 위한 플래그
+  bool _suppressNextSessionChange = false;
 
   @override
   void initState() {
@@ -71,6 +77,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _onSessionChanged() {
+    if (_suppressNextSessionChange) {
+      _suppressNextSessionChange = false;
+      return;
+    }
     setState(() => _messages = []);
     _loadMessages();
   }
@@ -78,16 +88,43 @@ class _ChatScreenState extends State<ChatScreen> {
   Future<void> _loadMessages() async {
     final sessionId = Store.selectedSessionId.value;
     if (sessionId.isEmpty) return;
-    final messages = await _repo.getMessages(sessionId);
-    if (!mounted) return;
-    // API는 오래된 순으로 반환 → reverse로 최신이 index 0에 오도록
-    setState(() => _messages = messages.reversed.toList());
+    setState(() => _isLoadingMessages = true);
+    try {
+      final messages = await _repo.getMessages(sessionId);
+      if (!mounted) return;
+      // API는 오래된 순으로 반환 → reverse로 최신이 index 0에 오도록
+      setState(() => _messages = messages.reversed.toList());
+    } finally {
+      if (mounted) setState(() => _isLoadingMessages = false);
+    }
   }
 
   Future<void> _sendChat(String content) async {
     if (content.trim().isEmpty) return;
-    final sessionId = Store.selectedSessionId.value;
-    if (sessionId.isEmpty || _isStreaming) return;
+    if (_isStreaming || _isLoadingMessages || _isCreatingSession) return;
+
+    var sessionId = Store.selectedSessionId.value;
+
+    // 채팅방이 선택되지 않은 상태에서 질문을 보내면 새 채팅방을 만들고
+    // 그 자리에서 바로 대화를 이어간다
+    if (sessionId.isEmpty) {
+      setState(() => _isCreatingSession = true);
+      final session = await _repo.createSession();
+      if (!mounted) return;
+      setState(() => _isCreatingSession = false);
+      if (session == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('새 채팅방을 만들지 못했습니다. 다시 시도해주세요.')),
+        );
+        return;
+      }
+
+      sessionId = session.sessionId;
+      _suppressNextSessionChange = true;
+      Store.selectedSessionTitle.value = session.title;
+      Store.selectedSessionId.value = sessionId;
+      Store.chatListRefresh.value++;
+    }
 
     final isFirstMessage = _messages.isEmpty;
 
@@ -164,7 +201,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   horizontal: 27,
                 ),
                 child: Text(
-                  title.isEmpty ? '채팅방을 선택해주세요' : title,
+                  title.isEmpty ? '새로운 대화' : title,
                   style: TextStyle(
                     fontSize: 22,
                     color: AppColors.textPrimary,
@@ -199,7 +236,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _chatInputField() {
     final backgroundColor = AppColors.surfaceBackground;
-    final canSend = Store.selectedSessionId.value.isNotEmpty && !_isStreaming;
+    final hasSession = Store.selectedSessionId.value.isNotEmpty;
+    // 채팅방이 선택되지 않았어도 입력은 받고, 전송 시점에 새 채팅방을 만든다
+    final canSend = !_isStreaming && !_isLoadingMessages && !_isCreatingSession;
 
     return Align(
       alignment: .bottomCenter,
@@ -249,7 +288,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               }
                               return KeyEventResult.ignored;
                             },
-                            child: _buildEditor(canSend),
+                            child: _buildEditor(canSend, hasSession),
                           ),
                         ),
                       ),
@@ -296,7 +335,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   // 일반 입력은 TextField, 여러 줄(코드) 입력은 코드 에디터(CodeField)로 표시
-  Widget _buildEditor(bool canSend) {
+  Widget _buildEditor(bool canSend, bool hasSession) {
     final isLight = Store.isLightMode.value;
     final textColor = AppColors.textPrimary;
 
@@ -311,9 +350,11 @@ class _ChatScreenState extends State<ChatScreen> {
         style: TextStyle(fontSize: 14, color: textColor),
         decoration: InputDecoration(
           contentPadding: .symmetric(horizontal: 14, vertical: 14),
-          hintText: canSend
-              ? 'Ask questions, or type \'/\' for commands'
-              : '채팅방을 선택해주세요',
+          hintText: !canSend
+              ? (_isCreatingSession ? '새 채팅방을 만드는 중...' : '잠시만 기다려주세요...')
+              : (hasSession
+                    ? 'Ask questions, or type \'/\' for commands'
+                    : '질문을 입력하면 새 채팅이 시작됩니다'),
           hintStyle: TextStyle(color: Color(0xffA0A7BB)),
           border: .none,
         ),
@@ -491,13 +532,21 @@ class _ChatScreenState extends State<ChatScreen> {
     height: double.infinity,
     child: _messages.isEmpty
         ? Center(
-            child: Text(
-              Store.selectedSessionId.value.isEmpty ? '' : '대화를 시작해보세요.',
-              style: TextStyle(
-                color: Color(0xffA0A7BB),
-                fontSize: 14,
-              ),
-            ),
+            child: _isLoadingMessages
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(
+                    Store.selectedSessionId.value.isEmpty
+                        ? '질문을 입력하면 새로운 대화가 시작됩니다.'
+                        : '대화를 시작해보세요.',
+                    style: TextStyle(
+                      color: Color(0xffA0A7BB),
+                      fontSize: 14,
+                    ),
+                  ),
           )
         : DefaultSelectionStyle(
             selectionColor: Color(0xff10A37F).withValues(alpha: 0.35),
