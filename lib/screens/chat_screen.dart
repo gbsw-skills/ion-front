@@ -449,6 +449,9 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
+                    blockquote: TextStyle(
+                      color: AppColors.textPrimary,
+                    ),
                     blockquoteDecoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
@@ -458,6 +461,16 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ),
                     listBullet: TextStyle(
+                      color: AppColors.textPrimary,
+                    ),
+                    a: TextStyle(color: AppColors.accent),
+                    del: TextStyle(color: AppColors.textPrimary),
+                    checkbox: TextStyle(color: AppColors.accent),
+                    tableHead: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                    tableBody: TextStyle(
                       color: AppColors.textPrimary,
                     ),
                   ),
