@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:ion/repositories/auth_repository.dart';
 import 'package:ion/screens/admin_page.dart';
 import 'package:ion/screens/home_page.dart';
@@ -22,7 +21,7 @@ void main() async {
           builder: (context, value, child) {
             return MaterialApp(
               theme: ThemeData(
-                // textTheme: GoogleFonts.notoSansKrTextTheme(),
+                fontFamily: 'NotoSansKR',
               ),
               debugShowCheckedModeBanner: false,
               home: initialScreen,
