@@ -48,7 +48,7 @@ class HistoryChatListState extends State<HistoryChatList> {
     }).toList())
       ..sort((a, b) => widget.sortNewest
           ? b.lastMessageAt.compareTo(a.lastMessageAt)
-          : a.title.compareTo(b.title));
+          : a.lastMessageAt.compareTo(b.lastMessageAt));
   }
 
   @override
@@ -310,7 +310,7 @@ class HistoryChatListState extends State<HistoryChatList> {
                       children: [
                         Expanded(
                           child: Text(
-                            chat.title,
+                            chat.title.length > 10 ? '${chat.title.substring(0, 10)}...' : chat.title,
                             style: TextStyle(
                               fontSize: 15,
                               color: titleColor,

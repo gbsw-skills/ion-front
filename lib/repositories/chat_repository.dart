@@ -150,9 +150,11 @@ class ChatRepository {
             in streamed.stream
                 .transform(utf8.decoder)
                 .transform(LineSplitter())) {
+          if (line.isNotEmpty && !(line.startsWith('data:') && eventType == 'token')) {
+            _log('SSE raw: "$line"');
+          }
           if (line.startsWith('event:')) {
             eventType = line.substring(6).trim();
-            _log('SSE event: $eventType');
           } else if (line.startsWith('data:')) {
             final data = line.substring(5).trim();
             if (eventType == 'token') {
@@ -169,7 +171,7 @@ class ChatRepository {
               Store.selectedSessionTitle.value = title;
               Store.chatListRefresh.value++;
             } else if (eventType == 'done') {
-              _log('SSE done — total: "${buffer.toString().length}" chars');
+              _log('SSE done data: $data — total: "${buffer.toString().length}" chars');
               finish();
             } else if (eventType == 'error') {
               _log('SSE error: $data');

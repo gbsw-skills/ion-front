@@ -212,7 +212,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
                   ? Icon(Icons.check, size: 14, color: AppColors.accent)
                   : null,
             ),
-            Text('제목순', style: TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+            Text('과거순', style: TextStyle(fontSize: 13, color: AppColors.textPrimary)),
           ],
         ),
       ),

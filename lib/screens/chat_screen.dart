@@ -208,7 +208,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   horizontal: 27,
                 ),
                 child: Text(
-                  title.isEmpty ? '새로운 대화' : title,
+                  title.isEmpty ? '새로운 대화' : (title.length > 10 ? '${title.substring(0, 10)}...' : title),
                   style: TextStyle(
                     fontSize: 22,
                     color: AppColors.textPrimary,
@@ -318,20 +318,6 @@ class _ChatScreenState extends State<ChatScreen> {
                       ),
                     ],
                   ),
-                ),
-              ),
-              SizedBox(width: 24),
-              Container(
-                alignment: Alignment.center,
-                width: 55,
-                height: 55,
-                decoration: BoxDecoration(
-                  color: backgroundColor,
-                  borderRadius: .circular(8),
-                ),
-                child: SizedBox(
-                  height: 20,
-                  child: SvgPicture.asset('assets/icons/mike.svg'),
                 ),
               ),
             ],
