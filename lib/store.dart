@@ -10,7 +10,7 @@ class Store {
   // 값이 바뀔 때마다 채팅 목록을 다시 불러오라는 신호
   static ValueNotifier<int> chatListRefresh = ValueNotifier(0);
   static ValueNotifier<int> currentIndex = ValueNotifier(0);
-  static String baseUrl = 'http://ion.gbsw.hs.kr/api/v1';
+  static String baseUrl = 'https://ion.gbsw.hs.kr/api/v1';
   static List<String> tabBarList = ['chat', 'filter', 'compass', 'settings'];
   static List<ChatRoomModel> chatList = [
     // Room 0: Flutter 상태관리 비교
