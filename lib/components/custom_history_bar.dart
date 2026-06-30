@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:ion/components/history/history_tap_bar.dart';
 import 'package:ion/enums/history_tap.dart';
-import 'package:ion/repositories/chat_repository.dart';
 import 'package:ion/store.dart';
 import 'package:ion/theme/app_colors.dart';
 
@@ -18,10 +17,13 @@ class CustomHistoryBar extends StatefulWidget {
 
 class _CustomHistoryBarState extends State<CustomHistoryBar> {
   final _listKey = GlobalKey<HistoryChatListState>();
+  final _searchController = TextEditingController();
   String selectedChatId = Store.selectedSessionId.value;
   HistoryTap selectTap = HistoryTap.chats;
   int _chatsCount = 0;
   int _savedCount = 0;
+  String _searchQuery = '';
+  bool _sortNewest = true;
 
   @override
   void initState() {
@@ -34,6 +36,7 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
   void dispose() {
     Store.isLightMode.removeListener(_rebuild);
     Store.selectedSessionId.removeListener(_onSessionIdChanged);
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -56,12 +59,9 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     Store.selectedSessionId.value = id;
   }
 
-  Future<void> _createSession() async {
-    final session = await ChatRepository().createSession();
-    if (session == null) return;
-    await _listKey.currentState?.reload();
-    Store.selectedSessionTitle.value = session.title;
-    changeChat(session.sessionId);
+  void _createSession() {
+    Store.selectedSessionId.value = '';
+    Store.selectedSessionTitle.value = '';
   }
 
   @override
@@ -111,6 +111,8 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
             selectedChatId: selectedChatId,
             changeChat: changeChat,
             selectTap: selectTap,
+            searchQuery: _searchQuery,
+            sortNewest: _sortNewest,
             onCountsChanged: (chats, saved) => setState(() {
               _chatsCount = chats;
               _savedCount = saved;
@@ -139,6 +141,8 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
           ),
           Expanded(
             child: TextField(
+              controller: _searchController,
+              onChanged: (v) => setState(() => _searchQuery = v),
               style: TextStyle(
                 fontSize: 16,
                 color: Color(0xFF575B65),
@@ -151,6 +155,14 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
               ),
             ),
           ),
+          if (_searchQuery.isNotEmpty)
+            GestureDetector(
+              onTap: () {
+                _searchController.clear();
+                setState(() => _searchQuery = '');
+              },
+              child: Icon(Icons.close, size: 14, color: Color(0xFF575B65)),
+            ),
         ],
       ),
     ),
@@ -164,16 +176,61 @@ class _CustomHistoryBarState extends State<CustomHistoryBar> {
     ],
   );
 
-  Widget filterBtn() => Container(
-    padding: EdgeInsets.all(9),
-    width: 38,
-    height: 38,
-    decoration: BoxDecoration(
-      color: AppColors.historyIconBoxBackground,
-      borderRadius: .circular(10),
-    ),
-    child: SvgPicture.asset(
-      'assets/icons/search_filter.svg',
+  Widget filterBtn() => PopupMenuButton<bool>(
+    padding: EdgeInsets.zero,
+    offset: Offset(0, 42),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    color: AppColors.dialogBackground,
+    elevation: 4,
+    onSelected: (newest) => setState(() => _sortNewest = newest),
+    itemBuilder: (_) => [
+      PopupMenuItem(
+        value: true,
+        height: 36,
+        child: Row(
+          spacing: 8,
+          children: [
+            SizedBox(
+              width: 14,
+              child: _sortNewest
+                  ? Icon(Icons.check, size: 14, color: AppColors.accent)
+                  : null,
+            ),
+            Text('최신순', style: TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
+      PopupMenuItem(
+        value: false,
+        height: 36,
+        child: Row(
+          spacing: 8,
+          children: [
+            SizedBox(
+              width: 14,
+              child: !_sortNewest
+                  ? Icon(Icons.check, size: 14, color: AppColors.accent)
+                  : null,
+            ),
+            Text('제목순', style: TextStyle(fontSize: 13, color: AppColors.textPrimary)),
+          ],
+        ),
+      ),
+    ],
+    child: Container(
+      padding: EdgeInsets.all(9),
+      width: 38,
+      height: 38,
+      decoration: BoxDecoration(
+        color: _sortNewest
+            ? AppColors.historyIconBoxBackground
+            : AppColors.accent.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(10),
+        border: _sortNewest
+            ? null
+            : Border.all(color: AppColors.accent.withValues(alpha: 0.5), width: 1),
+      ),
+      child: SvgPicture.asset('assets/icons/search_filter.svg'),
     ),
   );
 

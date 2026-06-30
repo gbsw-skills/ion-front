@@ -161,6 +161,13 @@ class ChatRepository {
               final token = json['token'] as String;
               buffer.write(token);
               controller.add(token);
+            } else if (eventType == 'title') {
+              _log('SSE title raw: $data');
+              final json = jsonDecode(data);
+              final title = json['title'] as String;
+              _log('SSE title: $title');
+              Store.selectedSessionTitle.value = title;
+              Store.chatListRefresh.value++;
             } else if (eventType == 'done') {
               _log('SSE done — total: "${buffer.toString().length}" chars');
               finish();

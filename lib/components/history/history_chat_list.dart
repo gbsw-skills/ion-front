@@ -15,12 +15,16 @@ class HistoryChatList extends StatefulWidget {
     required this.changeChat,
     required this.selectTap,
     this.onCountsChanged,
+    this.searchQuery = '',
+    this.sortNewest = true,
   });
 
   final String selectedChatId;
   final Function(String) changeChat;
   final HistoryTap selectTap;
   final void Function(int chats, int saved)? onCountsChanged;
+  final String searchQuery;
+  final bool sortNewest;
 
   @override
   State<HistoryChatList> createState() => HistoryChatListState();
@@ -29,15 +33,23 @@ class HistoryChatList extends StatefulWidget {
 class HistoryChatListState extends State<HistoryChatList> {
   final _chatRepository = ChatRepository();
   final List<HistoryChatModel> _allChats = [];
+  List<HistoryChatModel> _displayedChats = [];
   bool _isLoading = false;
   bool _hasError = false;
   String? _hoveredId;
   String? _popupOpenId; // 팝업이 열린 아이템 ID — 팝업 중 버튼이 트리에서 제거되는 것 방지
 
-  List<HistoryChatModel> get _displayedChats =>
-      widget.selectTap == HistoryTap.saved
-      ? _allChats.where((c) => c.isSaved).toList()
-      : _allChats;
+  void _recompute() {
+    final q = widget.searchQuery.trim().toLowerCase();
+    _displayedChats = (_allChats.where((c) {
+      if (widget.selectTap == HistoryTap.saved && !c.isSaved) return false;
+      if (q.isNotEmpty && !c.title.toLowerCase().contains(q)) return false;
+      return true;
+    }).toList())
+      ..sort((a, b) => widget.sortNewest
+          ? b.lastMessageAt.compareTo(a.lastMessageAt)
+          : a.title.compareTo(b.title));
+  }
 
   @override
   void initState() {
@@ -57,7 +69,11 @@ class HistoryChatListState extends State<HistoryChatList> {
   @override
   void didUpdateWidget(HistoryChatList oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.selectTap != widget.selectTap) setState(() {});
+    if (oldWidget.selectTap != widget.selectTap ||
+        oldWidget.searchQuery != widget.searchQuery ||
+        oldWidget.sortNewest != widget.sortNewest) {
+      setState(_recompute);
+    }
   }
 
   void _notifyCounts() {
@@ -96,6 +112,7 @@ class HistoryChatListState extends State<HistoryChatList> {
           ..clear()
           ..addAll(sessions.map((s) => _sessionToModel(s, savedIds)));
         _isLoading = false;
+        _recompute();
       });
       _notifyCounts();
 
@@ -128,7 +145,10 @@ class HistoryChatListState extends State<HistoryChatList> {
     final idx = _allChats.indexWhere((c) => c.id == chat.id);
     if (idx == -1) return;
     final newSaved = !chat.isSaved;
-    setState(() => _allChats[idx] = chat.copyWith(isSaved: newSaved));
+    setState(() {
+      _allChats[idx] = chat.copyWith(isSaved: newSaved);
+      _recompute();
+    });
     final savedIds = await _getSavedIds();
     if (newSaved) {
       if (!savedIds.contains(chat.id)) savedIds.add(chat.id);
@@ -142,7 +162,10 @@ class HistoryChatListState extends State<HistoryChatList> {
   Future<void> _deleteSession(HistoryChatModel chat) async {
     // 낙관적 삭제: 즉시 목록에서 제거
     final idx = _allChats.indexWhere((c) => c.id == chat.id);
-    setState(() => _allChats.removeWhere((c) => c.id == chat.id));
+    setState(() {
+      _allChats.removeWhere((c) => c.id == chat.id);
+      _recompute();
+    });
     if (Store.selectedSessionId.value == chat.id) {
       Store.selectedSessionId.value = '';
       Store.selectedSessionTitle.value = '';
@@ -153,7 +176,12 @@ class HistoryChatListState extends State<HistoryChatList> {
     if (!mounted) return;
     if (!ok) {
       // API 실패 시 복구
-      if (idx != -1) setState(() => _allChats.insert(idx, chat));
+      if (idx != -1) {
+        setState(() {
+          _allChats.insert(idx, chat);
+          _recompute();
+        });
+      }
       _notifyCounts();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('삭제에 실패했습니다. 다시 시도해주세요.')),
@@ -206,12 +234,15 @@ class HistoryChatListState extends State<HistoryChatList> {
       );
     }
     if (_displayedChats.isEmpty) {
+      final message = widget.searchQuery.trim().isNotEmpty
+          ? '검색 결과가 없습니다.'
+          : widget.selectTap == HistoryTap.saved
+              ? '저장된 대화가 없습니다.'
+              : '대화 기록이 없습니다.';
       return Expanded(
         child: Center(
           child: Text(
-            widget.selectTap == HistoryTap.saved
-                ? '저장된 대화가 없습니다.'
-                : '대화 기록이 없습니다.',
+            message,
             style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
           ),
         ),
