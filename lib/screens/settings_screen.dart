@@ -183,6 +183,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     activeTrackColor: Color(
                                       0xFF10A37F,
                                     ).withValues(alpha: 0.4),
+                                    inactiveTrackColor: Color(0xffF3F3F3FF),
                                   ),
                                 ],
                               ),

@@ -349,7 +349,6 @@ class _ChatScreenState extends State<ChatScreen> {
     if (!_isCodeInput) {
       return TextField(
         controller: _chatController,
-        enabled: canSend,
         onTapOutside: (_) => FocusScope.of(context).unfocus(),
         minLines: 1,
         maxLines: 8,
@@ -372,7 +371,6 @@ class _ChatScreenState extends State<ChatScreen> {
       data: CodeThemeData(styles: isLight ? githubTheme : atomOneDarkTheme),
       child: CodeField(
         controller: _chatController,
-        enabled: canSend,
         textStyle: TextStyle(
           fontSize: 13,
           fontFamily: 'monospace',
@@ -391,8 +389,7 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _messageItem(ChatModel chat) {
     final bubbleColor = chat.isMine
         ? AppColors.chatBubbleMine
-        : AppColors.chatBubbleOther;
-
+        : Colors.white;
     return Stack(
       children: [
         Container(
@@ -411,10 +408,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ),
                   },
                   styleSheet: MarkdownStyleSheet(
-                    p: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.textPrimary,
-                    ),
+                    p: TextStyle(fontSize: 14, color: AppColors.textPrimary),
                     h1: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -456,9 +450,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
-                    blockquote: TextStyle(
-                      color: AppColors.textPrimary,
-                    ),
+                    blockquote: TextStyle(color: AppColors.textPrimary),
                     blockquoteDecoration: BoxDecoration(
                       border: Border(
                         left: BorderSide(
@@ -467,9 +459,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         ),
                       ),
                     ),
-                    listBullet: TextStyle(
-                      color: AppColors.textPrimary,
-                    ),
+                    listBullet: TextStyle(color: AppColors.textPrimary),
                     a: TextStyle(color: AppColors.accent),
                     del: TextStyle(color: AppColors.textPrimary),
                     checkbox: TextStyle(color: AppColors.accent),
@@ -477,9 +467,7 @@ class _ChatScreenState extends State<ChatScreen> {
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
                     ),
-                    tableBody: TextStyle(
-                      color: AppColors.textPrimary,
-                    ),
+                    tableBody: TextStyle(color: AppColors.textPrimary),
                   ),
                 ),
         ),
