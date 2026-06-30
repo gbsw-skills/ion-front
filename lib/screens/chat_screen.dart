@@ -15,6 +15,7 @@ import '../models/chat_model.dart';
 import '../store.dart';
 import '../theme/app_colors.dart';
 import '../utils.dart';
+import '../utils/markdown_healing.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -48,6 +49,12 @@ class _ChatScreenState extends State<ChatScreen> {
     // 다른 탭에 갔다가 돌아오면 ChatScreen이 새로 생성되므로,
     // 이미 선택된 세션이 있다면 메시지를 다시 불러온다
     if (Store.selectedSessionId.value.isNotEmpty) _loadMessages();
+  }
+
+  @override
+  void deactivate() {
+    FocusManager.instance.primaryFocus?.unfocus();
+    super.deactivate();
   }
 
   @override
@@ -397,7 +404,7 @@ class _ChatScreenState extends State<ChatScreen> {
           child: chat.content.isEmpty
               ? _streamingIndicator()
               : MarkdownBody(
-                  data: chat.content,
+                  data: convertHtmlLineBreaks(chat.content),
                   builders: {
                     'pre': _CodeBlockBuilder(
                       isLight: Store.isLightMode.value,
