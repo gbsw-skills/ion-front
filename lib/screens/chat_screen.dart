@@ -128,12 +128,13 @@ class _ChatScreenState extends State<ChatScreen> {
 
       sessionId = session.sessionId;
       _suppressNextSessionChange = true;
-      Store.selectedSessionTitle.value = session.title;
       Store.selectedSessionId.value = sessionId;
       Store.chatListRefresh.value++;
     }
 
     final isFirstMessage = _messages.isEmpty;
+    // 채팅방 제목은 서버 제목 대신 해당 방의 첫 질문으로 보여준다
+    if (isFirstMessage) Store.selectedSessionTitle.value = content;
 
     _chatController.clear();
 
@@ -188,7 +189,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     if (mounted) setState(() => _isStreaming = false);
 
-    // 첫 메시지였다면 백엔드가 생성한 세션 제목을 반영하기 위해 채팅 목록을 새로고침
+    // 첫 메시지였다면 새로 시작된 채팅방이 목록에 보이도록 새로고침
     if (isFirstMessage) Store.chatListRefresh.value++;
   }
 
@@ -208,7 +209,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   horizontal: 27,
                 ),
                 child: Text(
-                  title.isEmpty ? '새로운 대화' : (title.length > 10 ? '${title.substring(0, 10)}...' : title),
+                  title.isEmpty ? '새로운 대화' : truncateTitle(title),
                   style: TextStyle(
                     fontSize: 22,
                     color: AppColors.textPrimary,

@@ -1,6 +1,6 @@
 class ChatSession {
   final String sessionId;
-  final String title;
+  String title;
   final String createdAt;
   final String lastActiveAt;
 

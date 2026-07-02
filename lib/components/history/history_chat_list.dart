@@ -310,7 +310,7 @@ class HistoryChatListState extends State<HistoryChatList> {
                       children: [
                         Expanded(
                           child: Text(
-                            chat.title.length > 10 ? '${chat.title.substring(0, 10)}...' : chat.title,
+                            truncateTitle(chat.title),
                             style: TextStyle(
                               fontSize: 15,
                               color: titleColor,

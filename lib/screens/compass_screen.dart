@@ -470,7 +470,7 @@ class _CompassScreenState extends State<CompassScreen> {
             ),
             Spacer(),
             Text(
-              session.title,
+              truncateTitle(session.title),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(

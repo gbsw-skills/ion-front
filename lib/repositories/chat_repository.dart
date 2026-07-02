@@ -9,6 +9,10 @@ import 'package:ion/store.dart';
 
 void _log(String msg) => debugPrint('[CHAT] $msg');
 
+/// 채팅방 이름 표시용 말줄임 처리 (5자 초과 시 ... 처리)
+String truncateTitle(String text) =>
+    text.length > 5 ? '${text.substring(0, 5)}...' : text;
+
 class ChatRepository {
   /// POST /chat/sessions — 새 채팅 세션 생성
   Future<ChatSession?> createSession() async {
@@ -29,6 +33,8 @@ class ChatRepository {
   }
 
   /// GET /chat/sessions — 세션 목록 조회
+  ///
+  /// 채팅방 제목은 서버가 내려주는 title 대신 해당 방의 첫 번째 질문으로 표시한다.
   Future<List<ChatSession>> getSessions({int page = 0, int size = 20}) async {
     final uri = Uri.parse(
       '${Store.baseUrl}/chat/sessions',
@@ -44,10 +50,34 @@ class ChatRepository {
       final body = jsonDecode(response.body);
       final content = body['data']['content'] as List;
       _log('sessions count: ${content.length}');
-      return content.map((e) => ChatSession.fromJson(e)).toList();
+      final sessions = content.map((e) => ChatSession.fromJson(e)).toList();
+      await Future.wait(sessions.map((s) async {
+        final firstMessage = await getFirstMessage(s.sessionId);
+        if (firstMessage.isNotEmpty) s.title = firstMessage;
+      }));
+      return sessions;
     }
     _log('getSessions failed: ${response.body}');
     return [];
+  }
+
+  /// GET /chat/sessions/{sessionId}/messages?page=0&size=1 — 채팅방의 첫 번째 질문 조회
+  Future<String> getFirstMessage(String sessionId) async {
+    final uri = Uri.parse(
+      '${Store.baseUrl}/chat/sessions/$sessionId/messages',
+    ).replace(queryParameters: {'page': '0', 'size': '1'});
+    final response = await http.get(
+      uri,
+      headers: {'Authorization': 'Bearer ${Store.token}'},
+    );
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final content = body['data']['content'] as List;
+      if (content.isNotEmpty) {
+        return (content.first['content'] as String?) ?? '';
+      }
+    }
+    return '';
   }
 
   /// GET /chat/sessions/{sessionId}/messages — 메시지 내역 조회
@@ -163,13 +193,6 @@ class ChatRepository {
               final token = json['token'] as String;
               buffer.write(token);
               controller.add(token);
-            } else if (eventType == 'title') {
-              _log('SSE title raw: $data');
-              final json = jsonDecode(data);
-              final title = json['title'] as String;
-              _log('SSE title: $title');
-              Store.selectedSessionTitle.value = title;
-              Store.chatListRefresh.value++;
             } else if (eventType == 'done') {
               _log('SSE done data: $data — total: "${buffer.toString().length}" chars');
               finish();
